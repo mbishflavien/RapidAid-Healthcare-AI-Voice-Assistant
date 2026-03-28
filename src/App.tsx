@@ -88,6 +88,8 @@ export default function App() {
   const [isConfigMissing, setIsConfigMissing] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [textInput, setTextInput] = useState('');
+  const [userVolume, setUserVolume] = useState(0);
+  const [aiVolume, setAiVolume] = useState(0);
 
   const voices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   const speechRates = [0.75, 1.0, 1.25, 1.5];
@@ -158,6 +160,14 @@ export default function App() {
     if (audioQueueRef.current.length > 0) {
       playNextChunk();
     }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUserVolume(v => Math.max(0, v * 0.8));
+      setAiVolume(v => Math.max(0, v * 0.8));
+    }, 50);
+    return () => clearInterval(interval);
   }, []);
 
   const startSession = async (initialText?: string) => {
@@ -243,6 +253,15 @@ export default function App() {
               processor.onaudioprocess = (e) => {
                 if (isMuted) return;
                 const inputData = e.inputBuffer.getChannelData(0);
+                
+                // Calculate volume for visualization
+                let sum = 0;
+                for (let i = 0; i < inputData.length; i++) {
+                  sum += inputData[i] * inputData[i];
+                }
+                const rms = Math.sqrt(sum / inputData.length);
+                setUserVolume(rms);
+
                 // Convert Float32 to Int16
                 const pcmData = new Int16Array(inputData.length);
                 for (let i = 0; i < inputData.length; i++) {
@@ -275,6 +294,16 @@ export default function App() {
                 bytes[i] = binaryString.charCodeAt(i);
               }
               const pcmData = new Int16Array(bytes.buffer);
+              
+              // Calculate AI volume for visualization
+              let sum = 0;
+              for (let i = 0; i < pcmData.length; i++) {
+                const val = pcmData[i] / 32767;
+                sum += val * val;
+              }
+              const rms = Math.sqrt(sum / pcmData.length);
+              setAiVolume(rms);
+
               audioQueueRef.current.push(pcmData);
               playNextChunk();
             }
@@ -334,6 +363,8 @@ export default function App() {
             setIsActive(false);
             setStatus('idle');
             stopAudio();
+            setUserVolume(0);
+            setAiVolume(0);
           },
           onerror: (err) => {
             console.error("Live API Error:", err);
@@ -361,6 +392,8 @@ export default function App() {
     setIsActive(false);
     setStatus('idle');
     stopAudio();
+    setUserVolume(0);
+    setAiVolume(0);
   };
 
   const handleSendText = async (e?: React.FormEvent) => {
@@ -616,15 +649,20 @@ export default function App() {
 
             <div className="flex items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <button 
+                <motion.button 
                   onClick={() => setIsMuted(!isMuted)}
                   disabled={!isActive}
+                  animate={{ 
+                    scale: userVolume > 0.01 ? [1, 1.1, 1] : 1,
+                    boxShadow: userVolume > 0.01 ? `0 0 ${userVolume * 100}px rgba(16, 185, 129, 0.4)` : 'none'
+                  }}
+                  transition={{ duration: 0.2 }}
                   className={`p-3 rounded-2xl transition-all ${
                     isMuted ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
                   } disabled:opacity-20 disabled:cursor-not-allowed`}
                 >
                   {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </button>
+                </motion.button>
               </div>
 
               {/* Pulse Visualization */}
@@ -634,14 +672,22 @@ export default function App() {
                     <motion.div
                       key={i}
                       animate={{ 
-                        height: [8, Math.random() * 32 + 8, 8],
+                        height: aiVolume > 0.01 
+                          ? [8, Math.random() * (aiVolume * 100) + 8, 8]
+                          : userVolume > 0.01 
+                            ? [8, Math.random() * (userVolume * 100) + 8, 8]
+                            : 8,
+                        backgroundColor: aiVolume > 0.01 
+                          ? "#10B981" // Green for AI
+                          : userVolume > 0.01 
+                            ? "#3B82F6" // Blue for User
+                            : "rgba(255, 255, 255, 0.1)"
                       }}
                       transition={{ 
-                        repeat: Infinity, 
-                        duration: 0.5 + Math.random() * 0.5,
+                        duration: 0.2,
                         ease: "easeInOut"
                       }}
-                      className="w-1 rounded-full bg-[#10B981]/60"
+                      className="w-1 rounded-full opacity-60"
                     />
                   ))
                 ) : (
