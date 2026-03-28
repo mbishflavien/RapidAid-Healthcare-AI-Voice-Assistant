@@ -315,15 +315,29 @@ export default function App() {
             }
 
             // Handle Transcriptions
-            const serverContent = message.serverContent as any;
-            const userText = serverContent?.userContent?.parts?.[0]?.text;
-            if (userText) {
-              setTranscriptions(prev => [...prev, { text: userText, isUser: true, timestamp: Date.now() }]);
-            }
+            if (message.serverContent) {
+              const { userContent, modelTurn } = message.serverContent as any;
+              
+              if (userContent?.parts) {
+                userContent.parts.forEach(part => {
+                  if (part.text) {
+                    setTranscriptions(prev => {
+                      // Avoid duplicates from manual text send
+                      const isDuplicate = prev.some(t => t.isUser && t.text === part.text && (Date.now() - t.timestamp < 3000));
+                      if (isDuplicate) return prev;
+                      return [...prev, { text: part.text, isUser: true, timestamp: Date.now() }];
+                    });
+                  }
+                });
+              }
 
-            const modelText = message.serverContent?.modelTurn?.parts?.[0]?.text;
-            if (modelText) {
-              setTranscriptions(prev => [...prev, { text: modelText, isUser: false, timestamp: Date.now() }]);
+              if (modelTurn?.parts) {
+                modelTurn.parts.forEach(part => {
+                  if (part.text) {
+                    setTranscriptions(prev => [...prev, { text: part.text, isUser: false, timestamp: Date.now() }]);
+                  }
+                });
+              }
             }
 
             // Handle Tool Calls (Language Detection)
@@ -431,6 +445,13 @@ export default function App() {
   useEffect(() => {
     transcriptionEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcriptions]);
+
+  const speakText = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#E4E4E7] font-sans selection:bg-[#10B981]/30">
@@ -590,12 +611,21 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${t.isUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[80%] p-4 rounded-2xl ${
+                <div className={`group relative max-w-[80%] p-4 rounded-2xl ${
                   t.isUser 
                     ? 'bg-[#10B981]/10 border border-[#10B981]/20 text-white' 
                     : 'bg-white/5 border border-white/10 text-white/90'
                 }`}>
                   <p className="text-sm leading-relaxed">{t.text}</p>
+                  {!t.isUser && (
+                    <button 
+                      onClick={() => speakText(t.text)}
+                      className="absolute -right-10 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all"
+                      title="Read aloud"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ))
