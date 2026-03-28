@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from "@google/genai";
-import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone } from 'lucide-react';
+import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // --- Constants ---
@@ -78,7 +78,10 @@ interface Transcription {
 export default function App() {
   const [isActive, setIsActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>(() => {
+    const saved = localStorage.getItem('rapidaid_history');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Puck');
@@ -418,6 +421,7 @@ export default function App() {
   // Auto-scroll transcriptions
   useEffect(() => {
     transcriptionEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    localStorage.setItem('rapidaid_history', JSON.stringify(transcriptions));
   }, [transcriptions]);
 
   useEffect(() => {
@@ -426,6 +430,13 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [liveCaption]);
+
+  const clearHistory = () => {
+    if (window.confirm("Are you sure you want to clear your conversation history?")) {
+      setTranscriptions([]);
+      localStorage.removeItem('rapidaid_history');
+    }
+  };
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -456,6 +467,17 @@ export default function App() {
         </div>
         
         <div className="flex items-center gap-4">
+          {transcriptions.length > 0 && (
+            <button 
+              onClick={clearHistory}
+              className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+              title="Clear History"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Clear</span>
+            </button>
+          )}
+
           <button 
             onClick={() => setShowResources(true)}
             className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
