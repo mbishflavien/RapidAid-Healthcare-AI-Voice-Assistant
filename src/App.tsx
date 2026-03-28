@@ -90,6 +90,7 @@ export default function App() {
   const [textInput, setTextInput] = useState('');
   const [userVolume, setUserVolume] = useState(0);
   const [aiVolume, setAiVolume] = useState(0);
+  const [liveCaption, setLiveCaption] = useState<{ text: string, isUser: boolean } | null>(null);
 
   const voices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
   const speechRates = [0.75, 1.0, 1.25, 1.5];
@@ -321,10 +322,16 @@ export default function App() {
               if (userContent?.parts) {
                 userContent.parts.forEach(part => {
                   if (part.text) {
+                    setLiveCaption({ text: part.text, isUser: true });
                     setTranscriptions(prev => {
-                      // Avoid duplicates from manual text send
-                      const isDuplicate = prev.some(t => t.isUser && t.text === part.text && (Date.now() - t.timestamp < 3000));
-                      if (isDuplicate) return prev;
+                      // Avoid duplicates from manual text send or rapid chunks
+                      const last = prev[prev.length - 1];
+                      if (last && last.isUser && (Date.now() - last.timestamp < 2000)) {
+                        // Append to last if it's the same turn (approximate)
+                        const updated = [...prev];
+                        updated[updated.length - 1] = { ...last, text: last.text + " " + part.text, timestamp: Date.now() };
+                        return updated;
+                      }
                       return [...prev, { text: part.text, isUser: true, timestamp: Date.now() }];
                     });
                   }
@@ -334,7 +341,17 @@ export default function App() {
               if (modelTurn?.parts) {
                 modelTurn.parts.forEach(part => {
                   if (part.text) {
-                    setTranscriptions(prev => [...prev, { text: part.text, isUser: false, timestamp: Date.now() }]);
+                    setLiveCaption({ text: part.text, isUser: false });
+                    setTranscriptions(prev => {
+                      const last = prev[prev.length - 1];
+                      if (last && !last.isUser && (Date.now() - last.timestamp < 3000)) {
+                        // Append to last if it's the same turn
+                        const updated = [...prev];
+                        updated[updated.length - 1] = { ...last, text: last.text + " " + part.text, timestamp: Date.now() };
+                        return updated;
+                      }
+                      return [...prev, { text: part.text, isUser: false, timestamp: Date.now() }];
+                    });
                   }
                 });
               }
@@ -445,6 +462,13 @@ export default function App() {
   useEffect(() => {
     transcriptionEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcriptions]);
+
+  useEffect(() => {
+    if (liveCaption) {
+      const timer = setTimeout(() => setLiveCaption(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [liveCaption]);
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -655,7 +679,29 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Main Control Bar */}
+          {/* Live Captions Overlay */}
+        <AnimatePresence>
+          {isActive && liveCaption && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full max-w-xl px-6 z-20 pointer-events-none"
+            >
+              <div className={`p-4 rounded-2xl backdrop-blur-xl border ${
+                liveCaption.isUser 
+                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-200' 
+                  : 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]'
+              } shadow-2xl text-center`}>
+                <p className="text-sm font-medium leading-relaxed">
+                  {liveCaption.text}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Control Bar */}
           <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col gap-4">
             <form 
               onSubmit={handleSendText}
