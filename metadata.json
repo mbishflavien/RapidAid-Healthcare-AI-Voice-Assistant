@@ -1,0 +1,7 @@
+{
+  "name": "RapidAid - Voice Health Assistant",
+  "description": "A real-time voice-activated healthcare assistant for immediate medical information and support.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
