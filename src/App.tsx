@@ -84,7 +84,7 @@ export default function App() {
   const [selectedVoice, setSelectedVoice] = useState<string>('Puck');
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState<string>('Detecting...');
-  const [speechRate, setSpeechRate] = useState<number>(1.0);
+  const [speechRate] = useState<number>(1.5);
   const [isConfigMissing, setIsConfigMissing] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [userVolume, setUserVolume] = useState(0);
@@ -92,7 +92,6 @@ export default function App() {
   const [liveCaption, setLiveCaption] = useState<{ text: string, isUser: boolean } | null>(null);
 
   const voices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
-  const speechRates = [0.75, 1.0, 1.25, 1.5];
 
   // Refs for audio and session
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -101,13 +100,8 @@ export default function App() {
   const sessionRef = useRef<any>(null);
   const audioQueueRef = useRef<Int16Array[]>([]);
   const nextStartTimeRef = useRef<number>(0);
-  const speechRateRef = useRef<number>(1.0);
+  const speechRateRef = useRef<number>(1.5);
   const transcriptionEndRef = useRef<HTMLDivElement>(null);
-
-  // Sync speechRate state to ref for audio scheduling
-  useEffect(() => {
-    speechRateRef.current = speechRate;
-  }, [speechRate]);
 
   // --- Audio Handling ---
 
@@ -436,6 +430,7 @@ export default function App() {
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.5;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -468,22 +463,6 @@ export default function App() {
             <BookOpen className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Resources</span>
           </button>
-
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-            {speechRates.map(rate => (
-              <button
-                key={rate}
-                onClick={() => setSpeechRate(rate)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                  speechRate === rate 
-                    ? 'bg-[#10B981] text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
-                    : 'text-white/40 hover:text-white/60'
-                }`}
-              >
-                {rate}x
-              </button>
-            ))}
-          </div>
 
           {isActive && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-xs font-medium">
