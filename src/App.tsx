@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from "@google/genai";
-import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Send, Phone } from 'lucide-react';
+import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // --- Constants ---
@@ -87,7 +87,6 @@ export default function App() {
   const [speechRate, setSpeechRate] = useState<number>(1.0);
   const [isConfigMissing, setIsConfigMissing] = useState(false);
   const [showResources, setShowResources] = useState(false);
-  const [textInput, setTextInput] = useState('');
   const [userVolume, setUserVolume] = useState(0);
   const [aiVolume, setAiVolume] = useState(0);
   const [liveCaption, setLiveCaption] = useState<{ text: string, isUser: boolean } | null>(null);
@@ -171,7 +170,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const startSession = async (initialText?: string) => {
+  const startSession = async () => {
     try {
       // Priority: process.env (Vite define) -> import.meta.env.VITE_GEMINI_API_KEY -> process.env.API_KEY
       const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (process.env as any).API_KEY;
@@ -278,11 +277,6 @@ export default function App() {
 
               source.connect(processor);
               processor.connect(audioContextRef.current!.destination);
-            }
-
-            // Send initial text if provided
-            if (initialText) {
-              session.sendRealtimeInput({ text: initialText });
             }
           },
           onmessage: async (message: LiveServerMessage) => {
@@ -425,37 +419,6 @@ export default function App() {
     stopAudio();
     setUserVolume(0);
     setAiVolume(0);
-  };
-
-  const handleSendText = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const text = textInput.trim();
-    if (!text) return;
-
-    if (!isActive || !sessionRef.current) {
-      // Start session with initial text
-      setTextInput('');
-      setTranscriptions(prev => [...prev, { 
-        text, 
-        isUser: true, 
-        timestamp: Date.now() 
-      }]);
-      await startSession(text);
-      return;
-    }
-
-    sessionRef.current.sendRealtimeInput({
-      text
-    });
-    
-    // Add to transcriptions locally for immediate feedback
-    setTranscriptions(prev => [...prev, { 
-      text, 
-      isUser: true, 
-      timestamp: Date.now() 
-    }]);
-    
-    setTextInput('');
   };
 
   // Auto-scroll transcriptions
@@ -703,26 +666,6 @@ export default function App() {
 
         {/* Main Control Bar */}
           <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col gap-4">
-            <form 
-              onSubmit={handleSendText}
-              className="flex items-center gap-2 p-2 rounded-2xl bg-white/5 border border-white/10 focus-within:border-[#10B981]/50 transition-all"
-            >
-              <input
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Type symptoms or questions..."
-                className="flex-1 bg-transparent border-none outline-none text-sm px-2 text-white placeholder:text-white/20"
-              />
-              <button 
-                type="submit"
-                disabled={!textInput.trim() || status === 'connecting'}
-                className="p-2 rounded-xl bg-[#10B981] text-white disabled:opacity-20 disabled:grayscale transition-all hover:bg-[#059669]"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-
             <div className="flex items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <motion.button 
