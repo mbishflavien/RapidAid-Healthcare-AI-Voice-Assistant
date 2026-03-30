@@ -1,4 +1,4 @@
-# 🏥 RapidAid — Healthcare AI Voice Assistant
+#  RapidAid — Healthcare AI Voice Assistant
 
 > An AI-powered voice assistant for healthcare guidance, built with Google Gemini and deployed on Vercel.
 
@@ -82,4 +82,4 @@ This project is open source. Feel free to use and adapt it for your own projects
 
 ---
 
-*Built with ❤️by MBISHIBISHI Flavien using Google AI Studio*
+*Built with ❤️ by MBISHIBISHI Flavien using Google AI Studio*
