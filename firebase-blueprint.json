@@ -29,27 +29,26 @@
       "description": "A consultation session.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "userId": { "type": "string" },
         "title": { "type": "string" },
         "timestamp": { "type": "integer" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "title", "timestamp"]
+      "required": ["userId", "title", "timestamp"]
     },
     "Message": {
       "title": "Message",
       "description": "A single message in a session.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
+        "userId": { "type": "string" },
         "sessionId": { "type": "string" },
         "text": { "type": "string" },
         "analysis": { "type": "object" },
         "isUser": { "type": "boolean" },
         "timestamp": { "type": "integer" }
       },
-      "required": ["id", "sessionId", "isUser", "timestamp"]
+      "required": ["userId", "sessionId", "isUser", "timestamp"]
     }
   },
   "firestore": {

@@ -47,42 +47,44 @@ service cloud.firestore {
     // --- Sessions Collection ---
     match /sessions/{sessionId} {
       function isValidSession(data) {
-        return data.keys().hasAll(['id', 'userId', 'title', 'timestamp']) &&
-               data.id is string && data.id.size() <= 128 &&
+        return data.keys().hasAll(['userId', 'title', 'timestamp']) &&
                data.userId == request.auth.uid &&
                data.title is string && data.title.size() <= 256 &&
-               data.timestamp is int;
+               data.timestamp is int &&
+               (data.keys().size() == 3 || (data.keys().size() == 4 && data.updatedAt != null));
       }
 
       allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() && isValidSession(incoming());
       allow update: if isSignedIn() && existing().userId == request.auth.uid && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt'])
+        isValidSession(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt'])
+        )
       );
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
 
       // --- Messages Subcollection ---
       match /messages/{messageId} {
         function isValidMessage(data) {
-          return data.keys().hasAll(['id', 'sessionId', 'isUser', 'timestamp']) &&
-                 data.id is string && data.id.size() <= 128 &&
+          return data.keys().hasAll(['userId', 'sessionId', 'isUser', 'timestamp']) &&
+                 data.userId == request.auth.uid &&
                  data.sessionId == sessionId &&
                  data.isUser is bool &&
-                 data.timestamp is int;
+                 data.timestamp is int &&
+                 // Fields like 'text' or 'analysis' are optional
+                 (data.get('text', '') is string) &&
+                 (data.get('text', '').size() <= 50000);
         }
 
-        // We check the parent session for ownership
-        function canAccessSession() {
-          return get(/databases/$(database)/documents/sessions/$(sessionId)).data.userId == request.auth.uid;
-        }
-
-        allow list: if isSignedIn() && canAccessSession();
-        allow get: if isSignedIn() && canAccessSession();
-        allow create: if isSignedIn() && canAccessSession() && isValidMessage(incoming());
-        allow update: if isSignedIn() && canAccessSession() && (
-          // Allow appending chunks to text during live transcription
-          incoming().diff(existing()).affectedKeys().hasOnly(['text', 'timestamp'])
+        allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() && isValidMessage(incoming());
+        allow update: if isSignedIn() && existing().userId == request.auth.uid && (
+          isValidMessage(incoming()) && (
+            // Allow updating text/timestamp during streaming
+            incoming().diff(existing()).affectedKeys().hasOnly(['text', 'timestamp'])
+          )
         );
       }
     }
