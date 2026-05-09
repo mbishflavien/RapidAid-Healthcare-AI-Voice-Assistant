@@ -249,6 +249,7 @@ export default function App() {
       if (latestNew.text !== latestOld.text) {
         const q = query(
           collection(db, `sessions/${activeId}/messages`),
+          where('userId', '==', user.uid),
           orderBy('timestamp', 'desc'),
           limit(1)
         );
