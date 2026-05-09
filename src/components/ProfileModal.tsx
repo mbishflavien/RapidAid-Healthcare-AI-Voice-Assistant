@@ -60,7 +60,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[200]"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -68,114 +68,114 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl z-[201] p-1"
           >
-            <div className="glass-morphism rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl p-8 relative flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl p-8 relative flex flex-col max-h-[90vh]">
               <button 
                 onClick={onClose}
-                className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                className="absolute top-6 right-6 p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-[#10B981]/10 text-[#10B981] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
                   <User className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Health Profile</h2>
-                  <p className="text-xs text-white/40 font-medium">Tailor AI suggestions to your medical background</p>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Health Profile</h2>
+                  <p className="text-xs text-slate-400 font-medium">Tailor AI suggestions to your medical background</p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Age</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Age</label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                       <input
                         type="number"
                         value={age}
                         onChange={(e) => setAge(e.target.value)}
                         placeholder="e.g. 35"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Gender</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Gender</label>
                     <div className="relative">
-                      <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                      <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                       <select
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all appearance-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none shadow-inner"
                       >
-                        <option value="" className="bg-[#0E1116]">Select</option>
-                        <option value="Male" className="bg-[#0E1116]">Male</option>
-                        <option value="Female" className="bg-[#0E1116]">Female</option>
-                        <option value="Other" className="bg-[#0E1116]">Other</option>
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
                       </select>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Blood Type</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Blood Type</label>
                     <div className="relative">
-                      <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                      <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                       <input
                         type="text"
                         value={bloodType}
                         onChange={(e) => setBloodType(e.target.value)}
                         placeholder="e.g. O+"
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Pre-existing Conditions</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Pre-existing Conditions</label>
                   <div className="relative">
-                    <HeartPulse className="absolute left-4 top-4 w-4 h-4 text-white/20" />
+                    <HeartPulse className="absolute left-4 top-4 w-4 h-4 text-slate-300" />
                     <textarea
                       value={conditions}
                       onChange={(e) => setConditions(e.target.value)}
                       placeholder="List any chronic conditions (e.g., Hypertension, Diabetes)"
                       rows={2}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-inner"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Allergies</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Allergies</label>
                   <div className="relative">
-                    <ShieldAlert className="absolute left-4 top-4 w-4 h-4 text-white/20" />
+                    <ShieldAlert className="absolute left-4 top-4 w-4 h-4 text-slate-300" />
                     <textarea
                       value={allergies}
                       onChange={(e) => setAllergies(e.target.value)}
                       placeholder="List any known allergies"
                       rows={2}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-inner"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] ml-2">Current Medications</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Current Medications</label>
                   <div className="relative">
-                    <Pill className="absolute left-4 top-4 w-4 h-4 text-white/20" />
+                    <Pill className="absolute left-4 top-4 w-4 h-4 text-slate-300" />
                     <textarea
                       value={medications}
                       onChange={(e) => setMedications(e.target.value)}
                       placeholder="List any medications currently taken"
                       rows={2}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#10B981]/50 transition-all resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-inner"
                     />
                   </div>
                 </div>
 
                 <div className="pt-4 flex items-center justify-between">
-                  <p className="text-[10px] text-white/20 italic max-w-[60%]">
+                  <p className="text-[10px] text-slate-300 italic max-w-[60%]">
                     Your information is stored securely and used only to personalize your health consultations.
                   </p>
                   <div className="flex items-center gap-4">
@@ -185,7 +185,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                           initial={{ opacity: 0, x: 10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0 }}
-                          className="text-[#10B981] text-xs font-bold uppercase tracking-widest"
+                          className="text-blue-600 text-xs font-bold uppercase tracking-widest"
                         >
                           Saved!
                         </motion.span>
@@ -194,7 +194,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                     <button
                       type="submit"
                       disabled={loading}
-                      className="bg-gradient-to-br from-[#10B981] to-[#059669] text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-[#10B981]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                      className="bg-gradient-to-br from-blue-600 to-blue-500 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
                       {loading ? 'Saving...' : 'Update Profile'}
                     </button>

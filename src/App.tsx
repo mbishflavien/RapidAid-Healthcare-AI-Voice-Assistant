@@ -781,12 +781,12 @@ Use this information to provide more personalized and relevant health guidance. 
   };
 
   return (
-    <div className="min-h-screen bg-[#08090A] text-[#E4E4E7] font-sans selection:bg-[#10B981]/30 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-500/30 overflow-hidden">
       {/* Background Atmosphere */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#10B981]/5 blur-[140px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#3B82F6]/5 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[30%] left-[40%] w-[30%] h-[30%] bg-[#10B981]/3 blur-[100px] rounded-full" />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-400/5 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[30%] left-[40%] w-[30%] h-[30%] bg-blue-500/3 blur-[100px] rounded-full" />
       </div>
 
       {/* History Sidebar */}
@@ -798,36 +798,36 @@ Use this information to provide more personalized and relevant health guidance. 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowHistory(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+              className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[100]"
             />
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] bg-[#0E1116] border-r border-white/10 z-[101] flex flex-col shadow-2xl"
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] bg-white border-r border-slate-200 z-[101] flex flex-col shadow-2xl"
             >
-              <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-[#10B981]/10 text-[#10B981]">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
                     <History className="w-5 h-5" />
                   </div>
-                  <h2 className="text-lg font-bold text-white tracking-tight">Consultations</h2>
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight">Consultations</h2>
                 </div>
                 <button 
                   onClick={() => setShowHistory(false)}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 hover:bg-slate-50 rounded-lg transition-colors"
                 >
-                  <ChevronLeft className="w-5 h-5 text-white/40" />
+                  <ChevronLeft className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
 
-              <div className="p-4 border-b border-white/5">
+              <div className="p-4 border-b border-slate-100">
                 <button
                   onClick={startNewSession}
-                  className="w-full p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-sm font-bold text-white group"
+                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all flex items-center justify-center gap-3 text-sm font-bold text-slate-700 group"
                 >
-                  <div className="p-1 rounded-lg bg-[#10B981]/20 text-[#10B981] group-hover:scale-110 transition-transform">
+                  <div className="p-1 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
                     <Plus className="w-4 h-4" />
                   </div>
                   New Consultation
@@ -837,10 +837,10 @@ Use this information to provide more personalized and relevant health guidance. 
               <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                 {sessions.length === 0 ? (
                   <div className="h-40 flex flex-col items-center justify-center text-center p-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                      <MessageSquare className="w-6 h-6 text-white/20" />
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-4">
+                      <MessageSquare className="w-6 h-6 text-slate-200" />
                     </div>
-                    <p className="text-sm text-white/40 font-medium">No consultations found yet.</p>
+                    <p className="text-sm text-slate-400 font-medium">No consultations found yet.</p>
                   </div>
                 ) : (
                   sessions.map(session => (
@@ -852,28 +852,28 @@ Use this information to provide more personalized and relevant health guidance. 
                       }}
                       className={`w-full p-4 rounded-2xl text-left transition-all relative group flex flex-col gap-1 border ${
                         currentSessionId === session.id 
-                          ? 'bg-[#10B981]/10 border-[#10B981]/30 ring-1 ring-[#10B981]/20' 
-                          : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05] hover:border-white/10'
+                          ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-100' 
+                          : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-200'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold text-white truncate max-w-[180px]">
+                        <span className={`text-sm font-bold truncate max-w-[180px] ${currentSessionId === session.id ? 'text-blue-700' : 'text-slate-700'}`}>
                           {session.title}
                         </span>
                         <button
                           onClick={(e) => deleteSession(session.id, e)}
-                          className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
+                          className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="w-3 h-3 text-white/30" />
-                        <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           {new Date(session.timestamp).toLocaleDateString()} • {new Date(session.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <div className="mt-2 text-[10px] text-white/20 font-medium line-clamp-1 italic">
+                      <div className="mt-2 text-[10px] text-slate-400 font-medium line-clamp-1 italic">
                         {session.transcriptions.length > 0 
                           ? `${session.transcriptions.length} messages` 
                           : 'Empty consultation'}
@@ -883,8 +883,8 @@ Use this information to provide more personalized and relevant health guidance. 
                 )}
               </div>
 
-              <div className="p-4 border-t border-white/5 bg-black/20">
-                <p className="text-[10px] text-center text-white/20 font-bold uppercase tracking-[0.2em]">
+              <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-[0.2em]">
                   Encrypted locally
                 </p>
               </div>
@@ -894,10 +894,10 @@ Use this information to provide more personalized and relevant health guidance. 
       </AnimatePresence>
 
       {/* Header */}
-      <header className="relative z-30 flex items-center justify-between px-8 py-5 border-b border-white/[0.03] glass-morphism">
+      <header className="relative z-30 flex items-center justify-between px-8 py-5 border-b border-slate-200 glass-morphism shadow-sm">
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center shadow-lg shadow-[#10B981]/20 overflow-hidden transition-transform group-hover:scale-105">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 overflow-hidden transition-transform group-hover:scale-105">
               <motion.div
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -906,43 +906,42 @@ Use this information to provide more personalized and relevant health guidance. 
               </motion.div>
               <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
             </div>
-            <div className="absolute -inset-1 bg-[#10B981]/20 blur-md rounded-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute -inset-1 bg-blue-500/20 blur-md rounded-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">RapidAid</h1>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">RapidAid</h1>
             <div className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-[#10B981]" />
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] leading-none">Safe Voice Intelligence</p>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] leading-none">Safe Voice Intelligence</p>
             </div>
           </div>
         </div>
         
           <div className="flex items-center gap-3">
             {transcriptions.length > 0 && (
-              <div className="flex items-center gap-2 pr-2 border-r border-white/5 mr-2">
+              <div className="flex items-center gap-2 pr-4 border-r border-slate-200 mr-2">
                 <button 
                   onClick={downloadTranscript}
-                  className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-[#10B981] hover:bg-[#10B981]/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm"
                   title="Export Transcript"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline">Export</span>
+                  <Download className="w-4 h-4" />
+                  <span className="hidden xl:inline">Export</span>
                 </button>
                 
                 <button 
                   onClick={clearHistory}
-                  className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-red-500 hover:bg-red-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm"
                   title="Clear History"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline">Clear</span>
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             )}
 
             <button 
               onClick={() => setShowHistory(true)}
-              className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm"
             >
               <History className="w-4 h-4" />
               <span className="hidden md:inline">History</span>
@@ -952,14 +951,14 @@ Use this information to provide more personalized and relevant health guidance. 
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setShowProfileModal(true)}
-                  className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-[#10B981] hover:bg-[#10B981]/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm"
                 >
                   <UserIcon className="w-4 h-4" />
                   <span className="hidden lg:inline">Profile</span>
                 </button>
                 <button 
                   onClick={() => signOut(firebaseAuth)}
-                  className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -968,7 +967,7 @@ Use this information to provide more personalized and relevant health guidance. 
             ) : (
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="px-6 py-2.5 rounded-xl bg-[#10B981] text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-[#10B981]/20 transition-all"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all"
               >
                 Sign In
               </button>
@@ -976,19 +975,19 @@ Use this information to provide more personalized and relevant health guidance. 
 
             <button 
               onClick={() => setShowResources(true)}
-              className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider shadow-sm"
             >
               <BookOpen className="w-4 h-4" />
-              <span className="hidden md:inline">Health Library</span>
+              <span className="hidden md:inline">Library</span>
             </button>
 
-            {isActive && (
+            {isActive && detectedLanguage !== 'Detecting...' && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-[10px] font-bold uppercase tracking-wider"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-black uppercase tracking-wider shadow-sm"
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                 {detectedLanguage}
               </motion.div>
             )}
@@ -996,9 +995,9 @@ Use this information to provide more personalized and relevant health guidance. 
             <div className="relative">
               <button 
                 onClick={() => setShowVoiceMenu(!showVoiceMenu)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-[10px] font-bold uppercase tracking-wider hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-blue-50 transition-all shadow-sm"
               >
-                <Volume2 className="w-4 h-4 text-[#10B981]" />
+                <Volume2 className="w-4 h-4 text-blue-500" />
                 {selectedVoice}
               </button>
               <AnimatePresence>
@@ -1007,7 +1006,7 @@ Use this information to provide more personalized and relevant health guidance. 
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-3 w-40 bg-[#121417] border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50 p-1.5"
+                    className="absolute top-full right-0 mt-3 w-40 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl z-50 p-1.5"
                   >
                     {voices.map(voice => (
                       <button
@@ -1016,7 +1015,7 @@ Use this information to provide more personalized and relevant health guidance. 
                           setSelectedVoice(voice);
                           setShowVoiceMenu(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-[11px] font-medium rounded-xl transition-colors ${selectedVoice === voice ? 'text-[#10B981] bg-[#10B981]/10' : 'text-white/50 hover:bg-white/5'}`}
+                        className={`w-full text-left px-4 py-2.5 text-[11px] font-bold rounded-xl transition-colors ${selectedVoice === voice ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
                         {voice}
                       </button>
@@ -1028,14 +1027,14 @@ Use this information to provide more personalized and relevant health guidance. 
           </div>
 
         <div className="flex items-center gap-3 pr-2">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-morphism scale-90">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm scale-90">
             <div className={`w-2 h-2 rounded-full ${
-              status === 'active' ? 'bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 
-              status === 'connecting' ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)] animate-pulse' : 
-              'bg-white/20'
+              status === 'active' ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-pulse' : 
+              status === 'connecting' ? 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-pulse' : 
+              'bg-slate-300'
             }`} />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">
-              {status === 'active' ? 'System Live' : status === 'connecting' ? 'Calibrating' : 'Standby'}
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+              {status === 'active' ? 'Live' : status === 'connecting' ? 'Calib' : 'Wait'}
             </span>
           </div>
         </div>
@@ -1043,55 +1042,49 @@ Use this information to provide more personalized and relevant health guidance. 
 
       <main className="relative z-20 max-w-5xl mx-auto px-8 py-10 h-[calc(100vh-84px)] flex flex-col">
         {/* Medical Disclaimer Banner */}
-        <div className="mb-10 p-5 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 flex gap-4 items-center glass-morphism">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-            <AlertCircle className="w-5 h-5 text-amber-500/70" />
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10 p-5 rounded-3xl bg-blue-50/50 border border-blue-100/50 backdrop-blur-md flex flex-wrap items-center justify-between gap-4 shadow-sm"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-inner">
+              <Info className="w-5 h-5" />
+            </div>
+            <p className="text-xs text-blue-800 font-medium leading-relaxed max-w-2xl px-2">
+              RapidAid provides health guidance based on AI intelligence. It is not a replacement for clinical advice. <span className="font-bold text-blue-900">In critical situations, contact medical professionals immediately.</span>
+            </p>
           </div>
-          <p className="text-sm text-amber-500/90 leading-relaxed font-medium">
-            RapidAid provides health guidance based on AI intelligence. <span className="text-white/90">It is not a replacement for clinical advice.</span> In critical situations, contact medical professionals immediately.
-          </p>
-        </div>
+          {!isActive && (
+            <button 
+              onClick={() => window.location.href = "tel:911"}
+              className="px-4 py-2 rounded-xl bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-200 transition-all flex items-center gap-2 shadow-sm"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              Emergency Contact
+            </button>
+          )}
+        </motion.div>
 
         {/* Transcription Area */}
         <div className="flex-1 overflow-y-auto mb-10 space-y-8 pr-6 custom-scrollbar">
           {isConfigMissing ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 p-8 rounded-3xl bg-red-500/5 border border-red-500/10">
-              <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center">
-                <AlertCircle className="w-10 h-10 text-red-500" />
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 p-8 rounded-3xl bg-slate-100 border border-slate-200">
+              <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
+                <AlertCircle className="w-10 h-10" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white mb-2">Configuration Required</h2>
-                <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed">
-                  To use RapidAid, you must add your <span className="text-white font-mono">GEMINI_API_KEY</span> to your environment variables.
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Configuration Required</h2>
+                <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                  To use RapidAid, you must add your <span className="text-slate-900 font-mono">GEMINI_API_KEY</span> to your environment variables.
                 </p>
-                <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-left">
-                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-2">Setup Instructions:</p>
-                  <ul className="text-xs text-white/60 space-y-2 list-disc pl-4">
-                    <li><strong>Vercel:</strong> Project Settings → Environment Variables → Add <code className="text-[#10B981]">GEMINI_API_KEY</code></li>
-                    <li><strong>AI Studio:</strong> Use the "Secrets" panel in the sidebar to add your key.</li>
-                    <li><strong>Local:</strong> Create a <code className="text-[#10B981]">.env</code> file with <code className="text-[#10B981]">GEMINI_API_KEY=your_key</code></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="flex flex-col gap-3 w-full max-w-sm">
-                <a 
-                  href="https://aistudio.google.com/app/apikey" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-all"
-                >
-                  Get Gemini API Key
-                </a>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
-                  Vercel Setup: Settings → Environment Variables
-                </div>
               </div>
             </div>
           ) : transcriptions.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-              <Activity className="w-12 h-12 mb-2" />
-              <h2 className="text-xl font-medium">How can I help you today?</h2>
-              <p className="max-w-xs text-sm">Tap the microphone to start a real-time health consultation.</p>
+              <Activity className="w-12 h-12 mb-2 text-blue-500" />
+              <h2 className="text-xl font-medium text-slate-800">How can I help you today?</h2>
+              <p className="max-w-xs text-sm text-slate-500">Tap the microphone to start a real-time health consultation.</p>
             </div>
           ) : (
             <div className="space-y-8 pb-32">
@@ -1107,44 +1100,44 @@ Use this information to provide more personalized and relevant health guidance. 
                     t.analysis 
                       ? 'w-full' 
                       : t.isUser 
-                        ? 'p-5 rounded-[2rem] bg-gradient-to-br from-[#10B981] to-[#059669] text-white shadow-lg shadow-[#10B981]/10 rounded-tr-lg' 
-                        : 'p-5 rounded-[2rem] glass-morphism text-white/90 shadow-sm rounded-tl-lg'
+                        ? 'p-5 rounded-[2rem] bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/10 rounded-tr-lg' 
+                        : 'p-5 rounded-[2rem] glass-morphism text-slate-800 shadow-sm rounded-tl-lg'
                   }`}>
                     {t.analysis ? (
-                      <div className="w-full glass-morphism rounded-[2.5rem] overflow-hidden border border-white/10 safe-glow">
-                        <div className={`p-6 flex items-center justify-between border-b border-white/5 ${
-                          t.analysis.urgency === 'Emergency' ? 'bg-red-500/10' :
-                          t.analysis.urgency === 'High' ? 'bg-amber-500/10' :
-                          'bg-[#10B981]/10'
+                      <div className="w-full glass-morphism rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-xl">
+                        <div className={`p-6 flex items-center justify-between border-b border-slate-100 ${
+                          t.analysis.urgency === 'Emergency' ? 'bg-red-50' :
+                          t.analysis.urgency === 'High' ? 'bg-amber-50' :
+                          'bg-blue-50'
                         }`}>
                           <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-2xl ${
-                              t.analysis.urgency === 'Emergency' ? 'bg-red-500/20 text-red-500' :
-                              t.analysis.urgency === 'High' ? 'bg-amber-500/20 text-amber-500' :
-                              'bg-[#10B981]/20 text-[#10B981]'
+                              t.analysis.urgency === 'Emergency' ? 'bg-red-100 text-red-600' :
+                              t.analysis.urgency === 'High' ? 'bg-amber-100 text-amber-600' :
+                              'bg-blue-100 text-blue-600'
                             }`}>
                               <ShieldAlert className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-white tracking-tight">Symptom Analysis</h3>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Urgency: {t.analysis.urgency}</p>
+                              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Symptom Analysis</h3>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Urgency: {t.analysis.urgency}</p>
                             </div>
                           </div>
                           <div className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                            t.analysis.urgency === 'Emergency' ? 'bg-red-500 text-white' :
+                            t.analysis.urgency === 'Emergency' ? 'bg-red-600 text-white' :
                             t.analysis.urgency === 'High' ? 'bg-amber-500 text-white' :
-                            'bg-[#10B981] text-white'
+                            'bg-blue-600 text-white'
                           }`}>
                             {t.analysis.urgency === 'Low' ? 'Routine' : t.analysis.urgency}
                           </div>
                         </div>
 
-                        <div className="p-8 space-y-8">
+                        <div className="p-8 space-y-8 bg-white">
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#10B981] mb-3">Identified Symptoms</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-3">Identified Symptoms</p>
                             <div className="flex flex-wrap gap-2">
                               {t.analysis.symptoms.map((s, idx) => (
-                                <span key={idx} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-xs text-white/70 font-medium">
+                                <span key={idx} className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 font-medium">
                                   {s}
                                 </span>
                               ))}
@@ -1152,48 +1145,48 @@ Use this information to provide more personalized and relevant health guidance. 
                           </div>
 
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#10B981] mb-4">Potential Conditions</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-4">Potential Considerations</p>
                             <div className="space-y-4">
                               {t.analysis.potentialConditions.map((c, idx) => (
-                                <div key={idx} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                <div key={idx} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100 hover:border-blue-200 transition-colors">
                                   <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-bold text-white leading-none">{c.name}</h4>
+                                    <h4 className="font-bold text-slate-900 leading-none">{c.name}</h4>
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                      c.likelihood === 'High' ? 'bg-red-500/10 text-red-400' :
-                                      c.likelihood === 'Moderate' ? 'bg-amber-500/10 text-amber-400' :
-                                      'bg-[#10B981]/10 text-[#10B981]'
+                                      c.likelihood === 'High' ? 'bg-red-100 text-red-600' :
+                                      c.likelihood === 'Moderate' ? 'bg-amber-100 text-amber-600' :
+                                      'bg-blue-100 text-blue-600'
                                     }`}>
                                       {c.likelihood} Likelihood
                                     </span>
                                   </div>
-                                  <p className="text-sm text-white/50 leading-relaxed">{c.description}</p>
+                                  <p className="text-sm text-slate-500 leading-relaxed">{c.description}</p>
                                 </div>
                               ))}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/5">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-slate-100">
                             <div>
                               <div className="flex items-center gap-2 mb-4">
-                                <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#10B981]">Recommendations</p>
+                                <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Recommendations</p>
                               </div>
                               <ul className="space-y-3">
                                 {t.analysis.recommendations.map((r, idx) => (
-                                  <li key={idx} className="flex gap-3 text-sm text-white/70 leading-relaxed font-medium">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]/40 mt-1.5 shrink-0" />
+                                  <li key={idx} className="flex gap-3 text-sm text-slate-600 leading-relaxed font-medium">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500/20 mt-1.5 shrink-0" />
                                     {r}
                                   </li>
                                 ))}
                               </ul>
                             </div>
                             {t.analysis.disclaimer && (
-                              <div className="p-5 rounded-2xl bg-amber-500/[0.03] border border-amber-500/10">
+                              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-100">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <Info className="w-4 h-4 text-amber-500/60" />
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/60">AI Disclaimer</p>
+                                  <Info className="w-4 h-4 text-amber-600/60" />
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600/60">AI Disclaimer</p>
                                 </div>
-                                <p className="text-xs text-amber-500/70 leading-relaxed italic">
+                                <p className="text-xs text-amber-600/70 leading-relaxed italic">
                                   {t.analysis.disclaimer}
                                 </p>
                               </div>
@@ -1205,13 +1198,13 @@ Use this information to provide more personalized and relevant health guidance. 
                       <>
                         <p className="text-[15px] leading-[1.6] font-medium">{t.text}</p>
                         <div className={`mt-3 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
-                          <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${t.isUser ? 'text-blue-100' : 'text-slate-400'}`}>
                             {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {!t.isUser && t.text && (
                             <button 
                               onClick={() => speakText(t.text!)}
-                              className="p-1.5 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                              className="p-1.5 rounded-lg bg-slate-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
                               title="Read aloud"
                             >
                               <Volume2 className="w-3.5 h-3.5" />
@@ -1237,13 +1230,13 @@ Use this information to provide more personalized and relevant health guidance. 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="absolute bottom-full left-0 right-0 mb-4 p-4 rounded-[2rem] bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-center justify-between glass-morphism"
+                className="absolute bottom-full left-0 right-0 mb-4 p-4 rounded-[2rem] bg-red-50 border border-red-200 text-red-600 text-sm flex items-center justify-between glass-morphism"
               >
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5" />
                   <span className="font-medium">{errorMessage}</span>
                 </div>
-                <button onClick={() => setErrorMessage(null)} className="p-2 hover:bg-red-500/10 rounded-xl transition-colors">
+                <button onClick={() => setErrorMessage(null)} className="p-2 hover:bg-red-100 rounded-xl transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </motion.div>
@@ -1259,12 +1252,12 @@ Use this information to provide more personalized and relevant health guidance. 
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
                 className="absolute bottom-44 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-40 pointer-events-none"
               >
-                <div className="p-6 rounded-[2.5rem] glass-morphism-heavy shadow-2xl text-center shadow-black/80 ring-1 ring-white/10">
+                <div className="p-6 rounded-[2.5rem] glass-morphism-heavy shadow-2xl text-center shadow-slate-200 ring-1 ring-slate-200">
                   <div className="flex items-center justify-center gap-3 mb-3">
-                    <div className={`w-1.5 h-1.5 rounded-full ${liveCaption.isUser ? 'bg-blue-400' : 'bg-[#10B981]'} animate-pulse`} />
+                    <div className={`w-1.5 h-1.5 rounded-full ${liveCaption.isUser ? 'bg-blue-400' : 'bg-blue-600'} animate-pulse`} />
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">Direct Transcription</span>
                   </div>
-                  <p className="text-lg font-medium leading-relaxed italic text-white/90">
+                  <p className="text-lg font-medium leading-relaxed italic text-slate-800">
                     "{liveCaption.text}"
                   </p>
                 </div>
@@ -1273,105 +1266,103 @@ Use this information to provide more personalized and relevant health guidance. 
           </AnimatePresence>
 
           {/* Main Control Bar */}
-          <div className="p-6 rounded-[2.8rem] glass-morphism-heavy flex flex-col gap-6 relative shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] ring-1 ring-white/[0.05]">
+          <div className="p-8 rounded-[3.5rem] bg-white border border-slate-200 shadow-2xl shadow-blue-900/5 relative ring-1 ring-slate-100">
             <form 
               onSubmit={handleSendText}
-              className="flex items-center gap-4 p-4 rounded-3xl bg-white/[0.03] border border-white/[0.06] focus-within:border-[#10B981]/40 focus-within:bg-white/[0.05] transition-all group"
+              className="flex items-center gap-4 p-5 rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-400 focus-within:bg-white transition-all group shadow-inner mb-8"
             >
-              <div className="pl-2">
-                <Activity className="w-5 h-5 text-white/10 group-focus-within:text-[#10B981]/60 transition-colors" />
+              <div className="pl-3">
+                <Activity className="w-6 h-6 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
               </div>
               <input
                 type="text"
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Share your symptoms or ask a medical question..."
-                className="flex-1 bg-transparent border-none outline-none text-base px-2 text-white placeholder:text-white/20 font-medium"
+                className="flex-1 bg-transparent border-none outline-none text-lg px-2 text-slate-900 placeholder:text-slate-400 font-semibold"
               />
               <button 
                 type="submit"
                 disabled={!textInput.trim() || status === 'connecting'}
-                className="p-3.5 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#059669] text-white disabled:opacity-20 disabled:grayscale transition-all hover:scale-105 active:scale-95 shadow-xl shadow-[#10B981]/20 group-active:translate-x-1"
+                className="p-4 rounded-2xl bg-blue-600 text-white disabled:opacity-20 disabled:grayscale transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20"
               >
                 <Send className="w-6 h-6" />
               </button>
             </form>
 
-            <div className="flex items-center justify-between gap-8">
+            <div className="flex items-center justify-between gap-6 px-2">
               <div className="flex items-center gap-4">
-                <motion.button 
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setIsMuted(!isMuted)}
                   disabled={!isActive}
-                  animate={{ 
-                    scale: userVolume > 0.01 ? [1, 1.05, 1] : 1,
-                  }}
                   transition={{ duration: 0.2 }}
-                  className={`p-4 rounded-2xl transition-all border ${
+                  className={`p-5 rounded-2xl transition-all border shadow-sm ${
                     isMuted 
-                      ? 'bg-red-500/10 border-red-500/20 text-red-500' 
-                      : 'bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:bg-white/10'
+                      ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' 
+                      : 'bg-white border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50'
                   } disabled:opacity-20 disabled:cursor-not-allowed`}
                 >
-                  {isMuted ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
+                  {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
                 </motion.button>
               </div>
 
               {/* Pulse Visualization */}
-              <div className="flex-1 h-16 flex items-center justify-center gap-1.5 px-6 rounded-[2rem] bg-black/40 overflow-hidden relative border border-white/[0.03]">
+              <div className="flex-1 h-20 flex items-center justify-center gap-2 px-8 rounded-3xl bg-slate-50 overflow-hidden relative border border-slate-200 shadow-inner">
                 {isActive ? (
-                  Array.from({ length: 48 }).map((_, i) => (
+                  Array.from({ length: 64 }).map((_, i) => (
                     <motion.div
                       key={i}
+                      className="w-1 rounded-full shrink-0"
                       animate={{ 
                         height: status === 'active' 
-                          ? (aiVolume > 0.01 ? [8, aiVolume * 80 + 8, 8] : [8, userVolume * 80 + 8, 8]) 
+                          ? (aiVolume > 0.01 ? [8, aiVolume * 120 + 8, 8] : [8, userVolume * 120 + 8, 8]) 
                           : 4
                       }}
                       style={{ 
-                        opacity: 0.2 + (i / 48) * 0.8,
+                        opacity: 0.3 + (i / 64) * 0.7,
                         backgroundColor: aiVolume > 0.01 
-                          ? "#10B981" 
+                          ? "#2563EB" 
                           : userVolume > 0.01 
                             ? "#3B82F6" 
-                            : "rgba(255, 255, 255, 0.1)"
+                            : "#94A3B8"
                       }}
                       transition={{ 
-                        duration: 0.15,
-                        delay: i * 0.005,
+                        duration: 0.1,
                         repeat: Infinity,
-                        repeatType: "mirror"
+                        repeatType: "reverse",
+                        delay: i * 0.01
                       }}
-                      className="w-1 rounded-full"
                     />
                   ))
                 ) : (
-                  <div className="flex items-center gap-1.5 opacity-10">
-                    {Array.from({ length: 48 }).map((_, i) => (
-                      <div key={i} className="w-1 h-[2.5px] bg-white rounded-full shrink-0" />
+                  <div className="flex items-center gap-2 opacity-30 text-slate-200">
+                    {Array.from({ length: 64 }).map((_, i) => (
+                      <div key={i} className="w-1 h-1 bg-current rounded-full shrink-0" />
                     ))}
                   </div>
                 )}
                 {isActive && (
-                  <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#10B981]/40 to-transparent blur-md" />
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent blur-md" />
                 )}
               </div>
 
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => window.location.href = "tel:911"}
-                  className="px-6 py-4 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.25em] shadow-lg shadow-red-500/[0.05] group shrink-0"
+                  className="px-6 py-5 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 transition-all border border-red-200 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.25em] shadow-sm group shrink-0"
                 >
-                  <Phone className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  <Phone className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                   911
                 </button>
-
                 <button
                   onClick={isActive ? endSession : () => startSession()}
                   disabled={status === 'connecting'}
-                  className={`px-12 py-4 rounded-2xl font-bold transition-all flex items-center gap-4 text-sm tracking-tight shrink-0 ${
+                  className={`px-12 py-5 rounded-2xl font-black transition-all flex items-center gap-4 text-xs uppercase tracking-widest shrink-0 ${
                     isActive 
-                      ? 'bg-white/10 text-white hover:bg-white/20 border border-white/5' 
-                      : 'bg-gradient-to-br from-[#10B981] to-[#059669] text-white hover:brightness-110 shadow-2xl shadow-[#10B981]/30 scale-[1.02] hover:scale-[1.05] active:scale-100'
+                      ? 'bg-slate-900 text-white hover:bg-slate-800 border border-slate-800 shadow-xl' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl shadow-blue-600/30 hover:scale-[1.02] active:scale-95'
                   } disabled:opacity-50`}
                 >
                   {status === 'connecting' ? (
@@ -1380,7 +1371,7 @@ Use this information to provide more personalized and relevant health guidance. 
                     'End Consultation'
                   ) : (
                     <>
-                      <Activity className="w-6 h-6" />
+                      <Volume2 className="w-6 h-6" />
                       Speak to RapidAid
                     </>
                   )}
@@ -1400,33 +1391,33 @@ Use this information to provide more personalized and relevant health guidance. 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowResources(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-[#0F1115] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl"
             >
-              <div className="p-8 border-b border-white/[0.05] flex items-center justify-between glass-morphism">
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between glass-morphism">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#10B981]/10 flex items-center justify-center border border-[#10B981]/20">
-                    <BookOpen className="w-6 h-6 text-[#10B981]" />
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <BookOpen className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white tracking-tight">Health Knowledge Base</h2>
-                    <p className="text-xs text-white/40 font-medium uppercase tracking-widest mt-0.5">Verified Medical Resources</p>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Health Knowledge Base</h2>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-0.5">Verified Medical Resources</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowResources(false)}
-                  className="p-2.5 hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/10"
+                  className="p-2.5 hover:bg-slate-50 rounded-2xl transition-all border border-transparent hover:border-slate-100"
                 >
-                  <X className="w-6 h-6 text-white/40" />
+                  <X className="w-6 h-6 text-slate-400" />
                 </button>
               </div>
 
-              <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-[#0F1115]">
+              <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {MEDICAL_RESOURCES.map((resource, idx) => (
                     <a 
@@ -1434,41 +1425,41 @@ Use this information to provide more personalized and relevant health guidance. 
                       href={resource.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group p-5 rounded-[2rem] bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] hover:border-[#10B981]/30 transition-all flex flex-col justify-between shadow-sm relative overflow-hidden"
+                      className="group p-5 rounded-[2rem] bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between shadow-sm relative overflow-hidden"
                     >
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#10B981]/80">
+                          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-600/80">
                             {resource.category}
                           </span>
-                          <ExternalLink className="w-4 h-4 text-white/10 group-hover:text-[#10B981] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                          <ExternalLink className="w-4 h-4 text-slate-200 group-hover:text-blue-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                         </div>
-                        <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#10B981] transition-colors leading-tight">
+                        <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors leading-tight">
                           {resource.name}
                         </h3>
-                        <p className="text-sm text-white/40 leading-relaxed font-medium">
+                        <p className="text-sm text-slate-500 leading-relaxed font-medium">
                           {resource.description}
                         </p>
                       </div>
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#10B981]/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     </a>
                   ))}
                 </div>
 
-                <div className="mt-10 p-6 rounded-3xl bg-red-500/[0.03] border border-red-500/10">
+                <div className="mt-10 p-6 rounded-3xl bg-red-50 border border-red-100">
                   <div className="flex items-start gap-4">
                     <AlertCircle className="w-6 h-6 text-red-500/70 shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-500/80 leading-relaxed font-medium">
+                    <p className="text-sm text-red-600 leading-relaxed font-medium">
                       <strong>Life-Saving Notice:</strong> These resources are for informational and preventative care only. If you are experiencing a life-threatening emergency, call your local emergency number (911, 999, etc.) immediately.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-8 bg-white/[0.02] border-t border-white/[0.05] flex justify-end">
+              <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
                 <button 
                   onClick={() => setShowResources(false)}
-                  className="px-8 py-3 rounded-2xl bg-white/5 text-white/70 text-sm font-bold uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                  className="px-8 py-3 rounded-2xl bg-white text-slate-600 text-sm font-bold uppercase tracking-widest hover:bg-slate-50 hover:text-blue-600 transition-all border border-slate-200"
                 >
                   Dismiss
                 </button>
@@ -1489,11 +1480,11 @@ Use this information to provide more personalized and relevant health guidance. 
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.1);
           border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(0, 0, 0, 0.2);
         }
       `}} />
     </div>
