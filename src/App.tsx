@@ -5,8 +5,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from "@google/genai";
-import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone, Trash2, Download, Send, CheckCircle2, Clock, ShieldAlert } from 'lucide-react';
+import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone, Trash2, Download, Send, CheckCircle2, Clock, ShieldAlert, History, Plus, ChevronLeft, MessageSquare, LogOut, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from './context/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { ProfileModal } from './components/ProfileModal';
+import { db, auth as firebaseAuth, handleFirestoreError, OperationType } from './lib/firebase';
+import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDocs, limit, serverTimestamp } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 // --- Constants ---
 const MODEL = "gemini-3.1-flash-live-preview";
@@ -56,6 +62,7 @@ VOICE CLARITY AND INTONATION:
 - Use natural prosody and intonation. Avoid sounding robotic.
 - Speak clearly and at a moderate pace.
 - Use appropriate pauses and emphasis to sound more human and empathetic.
+- Minimize fillers and provide direct, actionable advice where appropriate.
 MULTI-LANGUAGE SUPPORT:
 - You are capable of understanding and responding in multiple languages.
 - Detect the user's language automatically and respond in the same language.
@@ -89,13 +96,27 @@ interface Transcription {
   timestamp: number;
 }
 
+interface Session {
+  id: string;
+  title: string;
+  timestamp: number;
+  transcriptions: Transcription[];
+}
+
 export default function App() {
+  const { user, userData, loading: authLoading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
   const [isActive, setIsActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [transcriptions, setTranscriptions] = useState<Transcription[]>(() => {
-    const saved = localStorage.getItem('rapidaid_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const activeSession = sessions.find(s => s.id === currentSessionId);
+  const transcriptions = activeSession ? activeSession.transcriptions : [];
+
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Puck');
@@ -108,6 +129,176 @@ export default function App() {
   const [userVolume, setUserVolume] = useState(0);
   const [aiVolume, setAiVolume] = useState(0);
   const [liveCaption, setLiveCaption] = useState<{ text: string, isUser: boolean } | null>(null);
+
+  // Firestore Sync
+  useEffect(() => {
+    if (!user) {
+      setSessions([]);
+      setCurrentSessionId(null);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'sessions'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    );
+
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const sessionData: Session[] = [];
+      
+      for (const sessionDoc of snapshot.docs) {
+        const data = sessionDoc.data();
+        sessionData.push({
+          id: sessionDoc.id,
+          title: data.title,
+          timestamp: data.timestamp,
+          transcriptions: []
+        });
+      }
+      setSessions(sessionData);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'sessions');
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Sync Messages for ACTIVE Session
+  useEffect(() => {
+    if (!user || !currentSessionId) return;
+
+    const q = query(
+      collection(db, `sessions/${currentSessionId}/messages`),
+      orderBy('timestamp', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(d => d.data() as Transcription);
+      setSessions(prev => prev.map(s => {
+        if (s.id === currentSessionId) {
+          return { ...s, transcriptions: msgs };
+        }
+        return s;
+      }));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `sessions/${currentSessionId}/messages`);
+    });
+
+    return () => unsubscribe();
+  }, [user, currentSessionId]);
+
+  const updateTranscriptions = useCallback(async (updater: (prev: Transcription[]) => Transcription[]) => {
+    if (!user) {
+      // Fallback to local state for anonymous if we want, but user requested security/personalization
+      // So let's REQUIRE login or just show a warning.
+      setErrorMessage("Please log in to save your consultation.");
+      setShowAuthModal(true);
+      return;
+    }
+
+    let activeId = currentSessionId;
+
+    if (!activeId) {
+      try {
+        const sessionRef = await addDoc(collection(db, 'sessions'), {
+          userId: user.uid,
+          title: `Consultation ${new Date().toLocaleDateString()}`,
+          timestamp: Date.now(),
+          updatedAt: serverTimestamp()
+        });
+        activeId = sessionRef.id;
+        setCurrentSessionId(activeId);
+      } catch (e) {
+        handleFirestoreError(e, OperationType.CREATE, 'sessions');
+        return;
+      }
+    }
+
+    // Get current messages to run the updater
+    const session = sessions.find(s => s.id === activeId);
+    const currentMsgs = session ? session.transcriptions : [];
+    const newMsgs = updater(currentMsgs);
+    
+    if (newMsgs.length > currentMsgs.length) {
+      const latest = newMsgs[newMsgs.length - 1];
+      try {
+        await addDoc(collection(db, `sessions/${activeId}/messages`), {
+          ...latest,
+          sessionId: activeId
+        });
+      } catch (e) {
+        handleFirestoreError(e, OperationType.CREATE, `sessions/${activeId}/messages`);
+      }
+
+      // Update session title if needed
+      if (newMsgs.length === 1 && latest.text) {
+        const title = latest.text.slice(0, 30) + (latest.text.length > 30 ? '...' : '');
+        try {
+          await updateDoc(doc(db, 'sessions', activeId), { title });
+        } catch (e) {
+          handleFirestoreError(e, OperationType.UPDATE, `sessions/${activeId}`);
+        }
+      }
+    } else if (newMsgs.length > 0 && currentMsgs.length > 0) {
+      const latestNew = newMsgs[newMsgs.length - 1];
+      const latestOld = currentMsgs[currentMsgs.length - 1];
+      if (latestNew.text !== latestOld.text) {
+        const q = query(
+          collection(db, `sessions/${activeId}/messages`),
+          orderBy('timestamp', 'desc'),
+          limit(1)
+        );
+        try {
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            await updateDoc(doc(db, `sessions/${activeId}/messages`, snap.docs[0].id), {
+              text: latestNew.text,
+              timestamp: latestNew.timestamp
+            });
+          }
+        } catch (e) {
+          handleFirestoreError(e, OperationType.GET, `sessions/${activeId}/messages`);
+        }
+      }
+    }
+  }, [user, currentSessionId, sessions]);
+
+  const startNewSession = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    try {
+      const sessionRef = await addDoc(collection(db, 'sessions'), {
+        userId: user.uid,
+        title: `Consultation ${new Date().toLocaleDateString()}`,
+        timestamp: Date.now(),
+        updatedAt: serverTimestamp()
+      });
+      setCurrentSessionId(sessionRef.id);
+      setShowHistory(false);
+      if (isActive) endSession();
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'sessions');
+    }
+  };
+
+  const deleteSession = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Delete this consultation?")) {
+      try {
+        await deleteDoc(doc(db, 'sessions', id));
+        if (currentSessionId === id) {
+          setCurrentSessionId(null);
+        }
+      } catch (e) {
+        handleFirestoreError(e, OperationType.DELETE, `sessions/${id}`);
+      }
+    }
+  };
 
   const voices = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr'];
 
@@ -182,8 +373,30 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const getSystemInstruction = useCallback(() => {
+    let instruction = SYSTEM_INSTRUCTION;
+    if (userData?.healthProfile) {
+      const p = userData.healthProfile;
+      const context = `
+USER HEALTH CONTEXT:
+- Age: ${p.age || 'Not shared'}
+- Gender: ${p.gender || 'Not shared'}
+- Pre-existing conditions: ${p.conditions || 'None shared'}
+- Allergies: ${p.allergies || 'None shared'}
+- Medications: ${p.medications || 'None shared'}
+- Blood Type: ${p.bloodType || 'Not shared'}
+Use this information to provide more personalized and relevant health guidance. Avoid repeating this info back to the user unless necessary for clarification.`;
+      instruction += context;
+    }
+    return instruction;
+  }, [userData]);
+
   const startSession = async (initialText?: string) => {
     try {
+      if (!user && !initialText) {
+        setShowAuthModal(true);
+        return;
+      }
       // Priority: process.env (Vite define) -> import.meta.env.VITE_GEMINI_API_KEY -> process.env.API_KEY
       const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (process.env as any).API_KEY;
       
@@ -219,7 +432,7 @@ export default function App() {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedVoice } },
           },
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: getSystemInstruction(),
           tools: [
             {
               functionDeclarations: [
@@ -367,7 +580,7 @@ export default function App() {
                 userContent.parts.forEach(part => {
                   if (part.text) {
                     setLiveCaption({ text: part.text, isUser: true });
-                    setTranscriptions(prev => {
+                    updateTranscriptions(prev => {
                       // Avoid duplicates from manual text send or rapid chunks
                       const last = prev[prev.length - 1];
                       if (last && last.isUser && (Date.now() - last.timestamp < 2000)) {
@@ -386,7 +599,7 @@ export default function App() {
                 modelTurn.parts.forEach(part => {
                   if (part.text) {
                     setLiveCaption({ text: part.text, isUser: false });
-                    setTranscriptions(prev => {
+                    updateTranscriptions(prev => {
                       const last = prev[prev.length - 1];
                       if (last && !last.isUser && (Date.now() - last.timestamp < 3000)) {
                         // Append to last if it's the same turn
@@ -432,7 +645,7 @@ export default function App() {
                   });
                 } else if (fc.name === "displaySymptomAnalysis") {
                   const analysis = (fc.args as any).analysis;
-                  setTranscriptions(prev => [...prev, { analysis, isUser: false, timestamp: Date.now() }]);
+                  updateTranscriptions(prev => [...prev, { analysis, isUser: false, timestamp: Date.now() }]);
                   
                   session.sendToolResponse({
                     functionResponses: [{
@@ -490,7 +703,7 @@ export default function App() {
     if (!isActive || !sessionRef.current) {
       // Start session with initial text
       setTextInput('');
-      setTranscriptions(prev => [...prev, { 
+      updateTranscriptions(prev => [...prev, { 
         text, 
         isUser: true, 
         timestamp: Date.now() 
@@ -504,7 +717,7 @@ export default function App() {
     });
     
     // Add to transcriptions locally for immediate feedback
-    setTranscriptions(prev => [...prev, { 
+    updateTranscriptions(prev => [...prev, { 
       text, 
       isUser: true, 
       timestamp: Date.now() 
@@ -513,11 +726,10 @@ export default function App() {
     setTextInput('');
   };
 
-  // Auto-scroll transcriptions
-  useEffect(() => {
-    transcriptionEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    localStorage.setItem('rapidaid_history', JSON.stringify(transcriptions));
-  }, [transcriptions]);
+    // Auto-scroll transcriptions
+    useEffect(() => {
+      transcriptionEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [transcriptions]);
 
   useEffect(() => {
     if (liveCaption) {
@@ -528,8 +740,7 @@ export default function App() {
 
   const clearHistory = () => {
     if (window.confirm("Are you sure you want to clear your conversation history?")) {
-      setTranscriptions([]);
-      localStorage.removeItem('rapidaid_history');
+      updateTranscriptions(() => []);
     }
   };
 
@@ -578,6 +789,110 @@ export default function App() {
         <div className="absolute top-[30%] left-[40%] w-[30%] h-[30%] bg-[#10B981]/3 blur-[100px] rounded-full" />
       </div>
 
+      {/* History Sidebar */}
+      <AnimatePresence>
+        {showHistory && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHistory(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[320px] bg-[#0E1116] border-r border-white/10 z-[101] flex flex-col shadow-2xl"
+            >
+              <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-[#10B981]/10 text-[#10B981]">
+                    <History className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-lg font-bold text-white tracking-tight">Consultations</h2>
+                </div>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-white/40" />
+                </button>
+              </div>
+
+              <div className="p-4 border-b border-white/5">
+                <button
+                  onClick={startNewSession}
+                  className="w-full p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-sm font-bold text-white group"
+                >
+                  <div className="p-1 rounded-lg bg-[#10B981]/20 text-[#10B981] group-hover:scale-110 transition-transform">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  New Consultation
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                {sessions.length === 0 ? (
+                  <div className="h-40 flex flex-col items-center justify-center text-center p-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+                      <MessageSquare className="w-6 h-6 text-white/20" />
+                    </div>
+                    <p className="text-sm text-white/40 font-medium">No consultations found yet.</p>
+                  </div>
+                ) : (
+                  sessions.map(session => (
+                    <button
+                      key={session.id}
+                      onClick={() => {
+                        setCurrentSessionId(session.id);
+                        setShowHistory(false);
+                      }}
+                      className={`w-full p-4 rounded-2xl text-left transition-all relative group flex flex-col gap-1 border ${
+                        currentSessionId === session.id 
+                          ? 'bg-[#10B981]/10 border-[#10B981]/30 ring-1 ring-[#10B981]/20' 
+                          : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05] hover:border-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-white truncate max-w-[180px]">
+                          {session.title}
+                        </span>
+                        <button
+                          onClick={(e) => deleteSession(session.id, e)}
+                          className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3 h-3 text-white/30" />
+                        <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                          {new Date(session.timestamp).toLocaleDateString()} • {new Date(session.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[10px] text-white/20 font-medium line-clamp-1 italic">
+                        {session.transcriptions.length > 0 
+                          ? `${session.transcriptions.length} messages` 
+                          : 'Empty consultation'}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              <div className="p-4 border-t border-white/5 bg-black/20">
+                <p className="text-[10px] text-center text-white/20 font-bold uppercase tracking-[0.2em]">
+                  Encrypted locally
+                </p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="relative z-30 flex items-center justify-between px-8 py-5 border-b border-white/[0.03] glass-morphism">
         <div className="flex items-center gap-4">
@@ -623,6 +938,40 @@ export default function App() {
                   <span className="hidden lg:inline">Clear</span>
                 </button>
               </div>
+            )}
+
+            <button 
+              onClick={() => setShowHistory(true)}
+              className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+            >
+              <History className="w-4 h-4" />
+              <span className="hidden md:inline">History</span>
+            </button>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowProfileModal(true)}
+                  className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-[#10B981] hover:bg-[#10B981]/10 transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider"
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span className="hidden lg:inline">Profile</span>
+                </button>
+                <button 
+                  onClick={() => signOut(firebaseAuth)}
+                  className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="px-6 py-2.5 rounded-xl bg-[#10B981] text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-[#10B981]/20 transition-all"
+              >
+                Sign In
+              </button>
             )}
 
             <button 
@@ -1128,6 +1477,9 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
 
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar {

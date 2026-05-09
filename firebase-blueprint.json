@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing health information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "healthProfile": {
+          "type": "object",
+          "properties": {
+            "age": { "type": "number" },
+            "gender": { "type": "string" },
+            "conditions": { "type": "string", "description": "Pre-existing medical conditions." },
+            "allergies": { "type": "string", "description": "Known allergies." },
+            "medications": { "type": "string", "description": "Currently taken medications." },
+            "bloodType": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "A consultation session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "timestamp"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message in a session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "text": { "type": "string" },
+        "analysis": { "type": "object" },
+        "isUser": { "type": "boolean" },
+        "timestamp": { "type": "integer" }
+      },
+      "required": ["id", "sessionId", "isUser", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Session metadata."
+    },
+    "/sessions/{sessionId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages within a session."
+    }
+  }
+}

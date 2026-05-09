@@ -1,6 +1,6 @@
 {
   "name": "RapidAid - Voice Health Assistant",
-  "description": "A real-time voice-activated healthcare assistant for immediate medical information and support.",
+  "description": "A real-time voice-activated healthcare assistant with personalized health profiles and secure consultation history.",
   "requestFramePermissions": [
     "microphone"
   ]
