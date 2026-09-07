@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage, Type } from "@google/genai";
-import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone, Trash2, Download, Send, CheckCircle2, Clock, ShieldAlert, History, Plus, ChevronLeft, MessageSquare, LogOut, User as UserIcon, Menu } from 'lucide-react';
+import { Mic, MicOff, Activity, Stethoscope, AlertCircle, Info, X, Volume2, VolumeX, Globe, ExternalLink, BookOpen, Phone, Trash2, Download, Send, CheckCircle2, Clock, ShieldAlert, History, Plus, ChevronLeft, MessageSquare, LogOut, User as UserIcon, Menu, Pill } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
@@ -13,6 +13,9 @@ import { ProfileModal } from './components/ProfileModal';
 import { db, auth as firebaseAuth, handleFirestoreError, OperationType } from './lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDocs, limit, serverTimestamp } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
+
+import { MedicationPanel } from './components/MedicationPanel';
+import { Medication, subscribeToMedications, addMedication, deleteMedication } from './lib/medications';
 
 // --- Constants ---
 const MODEL = "gemini-3.1-flash-live-preview";
@@ -68,6 +71,13 @@ MULTI-LANGUAGE SUPPORT:
 - Detect the user's language automatically and respond in the same language.
 - IMPORTANT: Whenever you detect a language or the language changes, you MUST call the 'reportLanguage' tool with the name of the language (e.g., "English", "Spanish", "French").
 - Maintain the same professional healthcare persona regardless of the language used.
+MEDICATION & REMINDER CAPABILITY:
+- You can help users manage their medication schedule.
+- When a user wants to set a reminder or add a medication, gather: name, dosage, frequency, and specific times.
+- Once you have the details, use the 'addMedicationReminder' tool.
+- If the user asks about their current medications, use the 'listMedications' tool to get the current list before responding.
+- You can also remove reminders using 'removeMedicationReminder' if the user requests it.
+- Proactively suggest setting reminders if the user mentions new medications during the consultation.
 SYMPTOM CHECKER CAPABILITY:
 - When the user reports symptoms, ask clarifying questions (duration, severity, triggers).
 - Once you have enough information, use the 'displaySymptomAnalysis' tool to provide a structured, detailed summary.
@@ -123,20 +133,56 @@ export default function App() {
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState<string>('Detecting...');
   const [speechRate] = useState<number>(1.5);
-  const [isConfigMissing, setIsConfigMissing] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [userVolume, setUserVolume] = useState(0);
   const [aiVolume, setAiVolume] = useState(0);
   const [liveCaption, setLiveCaption] = useState<{ text: string, isUser: boolean } | null>(null);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [showMedications, setShowMedications] = useState(false);
+  const [activeReminders, setActiveReminders] = useState<string[]>([]);
+  const medicationsRef = useRef<Medication[]>([]);
 
-  // Firestore Sync
+  useEffect(() => {
+    medicationsRef.current = medications;
+  }, [medications]);
+
+  // Medication Reminder Checker
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const due = medicationsRef.current.filter(med => med.times.includes(currentTime));
+      if (due.length > 0) {
+        const names = due.map(d => d.name);
+        setActiveReminders(prev => [...new Set([...prev, ...names])]);
+        // Trigger voice reminder if session is active
+        if (isActive && sessionRef.current) {
+          sessionRef.current.sendRealtimeInput({
+            text: `SYSTEM NOTIFICATION: It is now ${currentTime}. The user has medication reminders for: ${names.join(', ')}. Please gently remind them and ask if they have taken their dose.`
+          });
+        }
+      }
+    };
+
+    const interval = setInterval(checkReminders, 60000); // Check every minute
+    checkReminders(); // Initial check
+    return () => clearInterval(interval);
+  }, [isActive]);
+
   useEffect(() => {
     if (!user) {
       setSessions([]);
       setCurrentSessionId(null);
+      setMedications([]);
       return;
     }
+
+    // Subscribe to Medications
+    const unsubscribeMeds = subscribeToMedications(user.uid, (meds) => {
+      setMedications(meds);
+    });
 
     const q = query(
       collection(db, 'sessions'),
@@ -162,7 +208,10 @@ export default function App() {
       handleFirestoreError(error, OperationType.LIST, 'sessions');
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeMeds();
+      unsubscribe();
+    };
   }, [user]);
 
   // Sync Messages for ACTIVE Session
@@ -400,12 +449,12 @@ Use this information to provide more personalized and relevant health guidance. 
         setShowAuthModal(true);
         return;
       }
-      // Priority: process.env (Vite define) -> import.meta.env.VITE_GEMINI_API_KEY -> process.env.API_KEY
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (process.env as any).API_KEY;
       
-      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey === '') {
-        setIsConfigMissing(true);
-        setErrorMessage("Gemini API Key is missing. Please add GEMINI_API_KEY to your environment variables.");
+      const apiKey = process.env.GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        setErrorMessage("Gemini API Key is missing. Please select an API key in the 'Secrets' menu.");
+        setStatus('error');
         return;
       }
 
@@ -493,6 +542,39 @@ Use this information to provide more personalized and relevant health guidance. 
                     },
                     required: ["analysis"]
                   }
+                },
+                {
+                  name: "addMedicationReminder",
+                  description: "Adds a new medication reminder for the user.",
+                  parameters: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING, description: "Name of the medication." },
+                      dosage: { type: Type.STRING, description: "Dosage amount." },
+                      frequency: { type: Type.STRING, description: "Frequency (e.g. Daily, Weekly)." },
+                      times: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of times in 24h format (e.g. ['08:00', '20:00'])." }
+                    },
+                    required: ["name", "dosage", "frequency", "times"]
+                  }
+                },
+                {
+                  name: "listMedications",
+                  description: "Returns the current list of medications and reminders for the user.",
+                  parameters: {
+                    type: Type.OBJECT,
+                    properties: {}
+                  }
+                },
+                {
+                  name: "removeMedicationReminder",
+                  description: "Removes a medication reminder by name.",
+                  parameters: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING, description: "The exact name of the medication to remove." }
+                    },
+                    required: ["name"]
+                  }
                 }
               ],
             },
@@ -504,46 +586,6 @@ Use this information to provide more personalized and relevant health guidance. 
           onopen: () => {
             setStatus('active');
             setIsActive(true);
-            
-            // Start sending audio if mic is available
-            if (micAvailable && streamRef.current) {
-              const source = audioContextRef.current!.createMediaStreamSource(streamRef.current!);
-              const processor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
-              processorRef.current = processor as any;
-
-              processor.onaudioprocess = (e) => {
-                if (isMuted) return;
-                const inputData = e.inputBuffer.getChannelData(0);
-                
-                // Calculate volume for visualization
-                let sum = 0;
-                for (let i = 0; i < inputData.length; i++) {
-                  sum += inputData[i] * inputData[i];
-                }
-                const rms = Math.sqrt(sum / inputData.length);
-                setUserVolume(rms);
-
-                // Convert Float32 to Int16
-                const pcmData = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                  pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 32767;
-                }
-                
-                // Send to Gemini
-                const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-                session.sendRealtimeInput({
-                  audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-                });
-              };
-
-              source.connect(processor);
-              processor.connect(audioContextRef.current!.destination);
-            }
-
-            // Send initial text if provided
-            if (initialText) {
-              session.sendRealtimeInput({ text: initialText });
-            }
           },
           onmessage: async (message: LiveServerMessage) => {
             // Handle Audio Output
@@ -628,7 +670,7 @@ Use this information to provide more personalized and relevant health guidance. 
                   }
                   
                   // Send response back to acknowledge tool call
-                  session.sendToolResponse({
+                  sessionRef.current?.sendToolResponse({
                     functionResponses: [{
                       name: fc.name,
                       id: fc.id,
@@ -639,7 +681,7 @@ Use this information to provide more personalized and relevant health guidance. 
                   window.location.href = "tel:911";
                   setErrorMessage("Emergency call initiated.");
                   
-                  session.sendToolResponse({
+                  sessionRef.current?.sendToolResponse({
                     functionResponses: [{
                       name: fc.name,
                       id: fc.id,
@@ -650,13 +692,65 @@ Use this information to provide more personalized and relevant health guidance. 
                   const analysis = (fc.args as any).analysis;
                   updateTranscriptions(prev => [...prev, { analysis, isUser: false, timestamp: Date.now() }]);
                   
-                  session.sendToolResponse({
+                  sessionRef.current?.sendToolResponse({
                     functionResponses: [{
                       name: fc.name,
                       id: fc.id,
                       response: { output: "Symptom analysis displayed to user." }
                     }]
                   });
+                } else if (fc.name === "addMedicationReminder") {
+                  if (user) {
+                    const { name, dosage, frequency, times } = fc.args as any;
+                    await addMedication(user.uid, {
+                      userId: user.uid,
+                      name,
+                      dosage,
+                      frequency,
+                      times
+                    });
+                    
+                    sessionRef.current?.sendToolResponse({
+                      functionResponses: [{
+                        name: fc.name,
+                        id: fc.id,
+                        response: { output: `Medication ${name} registered successfully.` }
+                      }]
+                    });
+                    setShowMedications(true);
+                  }
+                } else if (fc.name === "listMedications") {
+                  const medsList = medicationsRef.current.map(m => `- ${m.name}: ${m.dosage} (${m.frequency}) at ${m.times.join(', ')}`).join('\n');
+                  sessionRef.current?.sendToolResponse({
+                    functionResponses: [{
+                      name: fc.name,
+                      id: fc.id,
+                      response: { output: medsList || "No medications registered." }
+                    }]
+                  });
+                } else if (fc.name === "removeMedicationReminder") {
+                  if (user) {
+                    const { name } = fc.args as any;
+                    const med = medicationsRef.current.find(m => m.name.toLowerCase() === name.toLowerCase());
+                    if (med) {
+                      await deleteMedication(user.uid, med.id);
+                      sessionRef.current?.sendToolResponse({
+                        functionResponses: [{
+                          name: fc.name,
+                          id: fc.id,
+                          response: { output: `Medication ${name} removed.` }
+                        }]
+                      });
+                    } else {
+                      sessionRef.current?.sendToolResponse({
+                        functionResponses: [{
+                          name: fc.name,
+                          id: fc.id,
+                          response: { output: `Medication ${name} not found.` }
+                        }]
+                      });
+                    }
+                  }
                 }
               }
             }
@@ -668,9 +762,19 @@ Use this information to provide more personalized and relevant health guidance. 
             setUserVolume(0);
             setAiVolume(0);
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             console.error("Live API Error:", err);
-            setErrorMessage("Connection lost. Please try again.");
+            let message = "Connection lost. Please try again.";
+            
+            // Check for API key related errors
+            const errStr = String(err).toLowerCase();
+            if (errStr.includes("permission_denied") || errStr.includes("api_key_invalid") || errStr.includes("403") || errStr.includes("400")) {
+              message = "Invalid or restricted API Key. Please select a valid key in 'Settings > Secrets'.";
+            } else if (errStr.includes("resource_exhausted") || errStr.includes("429")) {
+              message = "Quota exceeded. Please select a billing-enabled API key in 'Settings > Secrets'.";
+            }
+            
+            setErrorMessage(message);
             setStatus('error');
             stopAudio();
           }
@@ -678,6 +782,47 @@ Use this information to provide more personalized and relevant health guidance. 
       });
 
       sessionRef.current = session;
+
+      // Initialize Audio Processing AFTER receiving session to avoid ReferenceError
+      if (micAvailable && streamRef.current) {
+        const source = audioContextRef.current!.createMediaStreamSource(streamRef.current!);
+        const processor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor as any;
+
+        processor.onaudioprocess = (e) => {
+          if (isMuted) return;
+          const inputData = e.inputBuffer.getChannelData(0);
+          
+          // Calculate volume for visualization
+          let sum = 0;
+          for (let i = 0; i < inputData.length; i++) {
+            sum += inputData[i] * inputData[i];
+          }
+          const rms = Math.sqrt(sum / inputData.length);
+          setUserVolume(rms);
+
+          // Convert Float32 to Int16
+          const pcmData = new Int16Array(inputData.length);
+          for (let i = 0; i < inputData.length; i++) {
+            pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 32767;
+          }
+          
+          // Send to Gemini
+          const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+          sessionRef.current?.sendRealtimeInput({
+            audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
+          });
+        };
+
+        source.connect(processor);
+        processor.connect(audioContextRef.current!.destination);
+      }
+
+      // Send initial text if provided
+      if (initialText) {
+        sessionRef.current?.sendRealtimeInput({ text: initialText });
+      }
+
     } catch (err) {
       console.error("Failed to start session:", err);
       setErrorMessage("Could not access microphone or connect to server.");
@@ -791,66 +936,75 @@ Use this information to provide more personalized and relevant health guidance. 
         <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-400/3 blur-[100px] rounded-full" />
       </div>
 
-      {/* History Sidebar - Real AI Layout */}
+      {/* History Sidebar - Premium Layout */}
       <motion.aside
         initial={false}
-        animate={{ width: showHistory ? 280 : 0, opacity: showHistory ? 1 : 0 }}
-        className="relative flex-shrink-0 bg-slate-50 border-r border-slate-200 z-40 flex flex-col h-full overflow-hidden"
+        animate={{ width: showHistory ? 300 : 0, opacity: showHistory ? 1 : 0 }}
+        className="relative flex-shrink-0 bg-slate-50 border-r border-slate-200/50 z-40 flex flex-col h-full overflow-hidden"
       >
-        <div className="w-[280px] flex flex-col h-full">
-          <div className="p-5 border-b border-slate-200/60 flex items-center justify-between bg-slate-50/80 backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
-                <Stethoscope className="w-5 h-5" />
+        <div className="w-[300px] flex flex-col h-full">
+          <div className="p-6 border-b border-slate-200/60 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                <Stethoscope className="w-6 h-6" />
               </div>
-              <span className="font-bold text-slate-900 tracking-tight">RapidAid</span>
+              <div>
+                <span className="font-bold text-slate-900 tracking-tight block leading-tight">RapidAid</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Medical Suite</span>
+              </div>
             </div>
             <button 
               onClick={() => setShowHistory(false)}
-              className="p-1.5 hover:bg-slate-200 rounded-md transition-colors text-slate-400"
+              className="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-4">
+          <div className="p-5">
             <button
               onClick={startNewSession}
-              className="w-full p-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-3 text-sm font-semibold text-slate-700 group"
+              className="w-full py-3 px-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all flex items-center gap-3 text-sm font-bold text-slate-700 group"
             >
-              <Plus className="w-4 h-4 text-blue-600" />
+              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Plus className="w-4 h-4" />
+              </div>
               New Consultation
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 custom-scrollbar">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-3">Previous Consultations</p>
             {sessions.length === 0 ? (
-              <div className="px-4 py-8 text-center text-slate-400">
-                <p className="text-xs font-medium">No previous logs</p>
+              <div className="p-8 text-center bg-slate-100/50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-xs font-semibold text-slate-400">No logs found</p>
               </div>
             ) : (
               sessions.map(session => (
                 <button
                   key={session.id}
                   onClick={() => setCurrentSessionId(session.id)}
-                  className={`w-full p-3 rounded-xl text-left transition-all group flex flex-col gap-0.5 border ${
+                  className={`w-full p-4 rounded-2xl text-left transition-all group flex flex-col gap-1 border ${
                     currentSessionId === session.id 
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/10' 
+                      ? 'bg-white border-blue-200 shadow-lg shadow-blue-500/5' 
                       : 'bg-transparent border-transparent hover:bg-slate-200/50 text-slate-600'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className={`text-[13px] font-semibold truncate flex-1 ${currentSessionId === session.id ? 'text-white' : 'text-slate-800'}`}>
+                    <span className={`text-[13px] font-bold truncate flex-1 ${currentSessionId === session.id ? 'text-blue-600' : 'text-slate-800'}`}>
                       {session.title}
                     </span>
                     <Trash2 
                       onClick={(e) => deleteSession(session.id, e)}
-                      className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all ml-2 ${currentSessionId === session.id ? 'text-blue-100' : 'text-slate-400'}`} 
+                      className={`w-4 h-4 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all ml-2 ${currentSessionId === session.id ? 'text-slate-300' : 'text-slate-400'}`} 
                     />
                   </div>
-                  <span className={`text-[10px] ${currentSessionId === session.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                    {new Date(session.timestamp).toLocaleDateString()}
-                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="w-3 h-3 text-slate-300" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      {new Date(session.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
                 </button>
               ))
             )}
@@ -886,59 +1040,88 @@ Use this information to provide more personalized and relevant health guidance. 
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 relative h-full bg-white">
-        {/* Simplified Sticky Header */}
-        <header className="h-14 flex items-center justify-between px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        {/* Premium Header */}
+        <header className="h-20 flex items-center justify-between px-8 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
             {!showHistory && (
               <button 
                 onClick={() => setShowHistory(true)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+                className="p-3 hover:bg-slate-100 rounded-2xl transition-all text-slate-500 hover:text-blue-600 bg-slate-50/50"
               >
                 <History className="w-5 h-5" />
               </button>
             )}
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-slate-300'}`} />
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                {status === 'active' ? 'System Ready' : 'Standby'}
-              </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${status === 'active' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-slate-300'} animate-pulse`} />
+                <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
+                  {status === 'active' ? 'Neural Link Active' : 'System Standby'}
+                </span>
+              </div>
+              {isActive && (
+                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5 ml-4">
+                  Voice Session in Progress
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setShowResources(true)}
-              className="p-2 text-slate-500 hover:text-blue-600 transition-colors"
-              title="Health Library"
-            >
-              <BookOpen className="w-5 h-5" />
-            </button>
-            {user && (
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-6 mr-4 border-r border-slate-200 pr-6 h-10">
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Language</span>
+                <span className="text-xs font-bold text-slate-700">{detectedLanguage === 'Detecting...' ? 'Auto-Detect' : detectedLanguage}</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Signal</span>
+                <span className="text-xs font-bold text-slate-700">{status === 'connecting' ? 'Calibrating...' : 'Encrypted'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-100/50 p-1 rounded-2xl">
               <button 
-                onClick={() => setShowProfileModal(true)}
-                className="p-2 text-slate-500 hover:text-blue-600 transition-colors"
-                title="Profile"
+                onClick={() => setShowMedications(true)}
+                className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"
+                title="Medications & Reminders"
               >
-                <UserIcon className="w-5 h-5" />
+                <Pill className="w-5 h-5" />
               </button>
-            )}
-            <div className="w-[1px] h-4 bg-slate-200 mx-1" />
+              <button 
+                onClick={() => setShowResources(true)}
+                className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"
+                title="Health Library"
+              >
+                <BookOpen className="w-5 h-5" />
+              </button>
+              {user && (
+                <button 
+                  onClick={() => setShowProfileModal(true)}
+                  className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl transition-all shadow-none hover:shadow-sm"
+                  title="Profile"
+                >
+                  <UserIcon className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
             <div className="relative">
               <button 
                 onClick={() => setShowVoiceMenu(!showVoiceMenu)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-[11px] font-bold text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
               >
-                <Volume2 className="w-3.5 h-3.5 text-blue-500" />
+                <div className="w-2 h-2 rounded-full bg-blue-400" />
                 {selectedVoice}
+                <Volume2 className="w-4 h-4 opacity-50" />
               </button>
               <AnimatePresence>
                 {showVoiceMenu && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute top-full right-0 mt-2 w-32 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl z-50 p-1"
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="absolute top-full right-0 mt-3 w-44 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl z-50 p-2"
                   >
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] p-3">Voice Profile</p>
                     {voices.map(voice => (
                       <button
                         key={voice}
@@ -946,9 +1129,10 @@ Use this information to provide more personalized and relevant health guidance. 
                           setSelectedVoice(voice);
                           setShowVoiceMenu(false);
                         }}
-                        className={`w-full text-left px-3 py-2 text-[10px] font-semibold rounded-lg transition-colors ${selectedVoice === voice ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}
+                        className={`w-full text-left px-4 py-3 text-xs font-bold rounded-xl transition-all flex items-center justify-between ${selectedVoice === voice ? 'text-blue-600 bg-blue-50' : 'text-slate-600 hover:bg-slate-50'}`}
                       >
                         {voice}
+                        {selectedVoice === voice && <CheckCircle2 className="w-4 h-4" />}
                       </button>
                     ))}
                   </motion.div>
@@ -958,130 +1142,193 @@ Use this information to provide more personalized and relevant health guidance. 
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden flex flex-col relative w-full">
+        <main className="flex-1 overflow-hidden flex flex-col relative w-full bg-[#FAFAFB]">
           {/* Main Scroll Container */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-6 scroll-smooth">
-            <div className="max-w-3xl mx-auto py-10 space-y-12">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-6 sm:px-10 scroll-smooth">
+            <div className="max-w-3xl mx-auto py-12 space-y-12 pb-40">
               {/* Medical Disclaimer Banner */}
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-start gap-3 shadow-sm"
+                className="p-5 rounded-3xl bg-white border border-slate-200 flex items-start gap-4 shadow-sm relative overflow-hidden"
               >
-                <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[12px] text-amber-800 leading-relaxed font-medium">
-                  <strong>Notice:</strong> RapidAid is an AI assistant, not a doctor. In critical situations, contact medical professionals immediately.
-                </p>
+                <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <Info className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-[13px] text-slate-700 leading-relaxed font-bold">
+                    Official Medical Notice
+                  </p>
+                  <p className="text-[12px] text-slate-500 leading-relaxed font-medium mt-1">
+                    RapidAid is powered by generative AI and should not be used as a primary diagnostic tool. In case of emergency, contact local first responders immediately.
+                  </p>
+                </div>
               </motion.div>
 
-              {/* Transcription Area */}
-              <div className="space-y-8">
-                {isConfigMissing ? (
-                  <div className="p-10 rounded-3xl bg-slate-50 border border-slate-200 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-6">
-                      <AlertCircle className="w-10 h-10" />
+              {activeReminders.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-6 rounded-[2.5rem] bg-blue-600 text-white shadow-xl shadow-blue-600/20 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                      <Pill className="w-7 h-7" />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 mb-2">Configuration Required</h2>
-                    <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-                      Please add your GEMINI_API_KEY to the environment variables to start using RapidAid.
-                    </p>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-100">Medication Reminder</p>
+                      <h4 className="text-lg font-bold leading-tight">Time for {activeReminders.join(', ')}</h4>
+                    </div>
                   </div>
-                ) : transcriptions.length === 0 ? (
-                  <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-6">
+                  <button 
+                    onClick={() => setActiveReminders([])}
+                    className="px-6 py-2 rounded-xl bg-white text-blue-600 text-xs font-black uppercase tracking-widest hover:bg-blue-50 transition-colors"
+                  >
+                    Acknowledge
+                  </button>
+                </motion.div>
+              )}
+
+              {/* Transcription Area */}
+              <div className="space-y-10">
+                {transcriptions.length === 0 ? (
+                  <div className="h-[60vh] flex flex-col items-center justify-center text-center space-y-8">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
-                      <Stethoscope className="w-16 h-16 text-blue-600 relative z-10" />
+                      <div className="absolute inset-0 bg-blue-600/10 blur-[80px] rounded-full animate-pulse" />
+                      <div className="w-24 h-24 rounded-[2.5rem] bg-white border border-slate-200 flex items-center justify-center shadow-2xl relative z-10">
+                        <Activity className="w-10 h-10 text-blue-600 animate-[bounce_3s_infinite]" />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <h2 className="text-3xl font-bold text-slate-900 tracking-tight">How can I help you?</h2>
-                      <p className="text-slate-500 max-w-md mx-auto">
-                        Start a voice consultation or type your symptoms to receive an AI-powered health analysis.
+                    <div className="space-y-3">
+                      <h2 className="text-4xl font-bold text-slate-900 tracking-tight">How can I assist you today?</h2>
+                      <p className="text-slate-500 max-w-md mx-auto text-lg font-medium leading-relaxed">
+                        Speak naturally about your health concerns or type symptoms for a rapid AI-driven analysis.
                       </p>
+                    </div>
+                    <div className="flex items-center gap-4 pt-4">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                          <Mic className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Voice</span>
+                      </div>
+                      <div className="w-8 h-[1px] bg-slate-200" />
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                          <MessageSquare className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Text</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
                   transcriptions.map((t, i) => (
                     <motion.div
                       key={t.timestamp + i}
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${t.isUser ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className={`relative ${t.analysis ? 'w-full' : 'max-w-[85%]'}`}>
                         {t.analysis ? (
-                          <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50">
-                            <div className={`px-6 py-4 flex items-center justify-between border-b border-slate-100 ${
-                              t.analysis.urgency === 'Emergency' ? 'bg-red-50' :
-                              t.analysis.urgency === 'High' ? 'bg-amber-50' :
+                          <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40">
+                            <div className={`px-8 py-6 flex items-center justify-between border-b border-slate-100 ${
+                              t.analysis.urgency === 'Emergency' ? 'bg-red-50/50' :
+                              t.analysis.urgency === 'High' ? 'bg-amber-50/50' :
                               'bg-blue-50/50'
                             }`}>
-                              <div className="flex items-center gap-3">
-                                <ShieldAlert className={`w-5 h-5 ${
-                                  t.analysis.urgency === 'Emergency' ? 'text-red-600' :
-                                  t.analysis.urgency === 'High' ? 'text-amber-600' :
-                                  'text-blue-600'
-                                }`} />
-                                <span className="font-bold text-slate-900 text-sm">Health Analysis</span>
+                              <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                                  t.analysis.urgency === 'Emergency' ? 'bg-red-100 text-red-600' :
+                                  t.analysis.urgency === 'High' ? 'bg-amber-100 text-amber-600' :
+                                  'bg-blue-100 text-blue-600'
+                                } shadow-sm`}>
+                                  <ShieldAlert className="w-7 h-7" />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-slate-900 text-lg">Health Assessment</h3>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Generated Report</p>
+                                </div>
                               </div>
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                t.analysis.urgency === 'Emergency' ? 'bg-red-600 text-white' :
-                                t.analysis.urgency === 'High' ? 'bg-amber-500 text-white' :
-                                'bg-blue-600 text-white'
-                              }`}>
+                              <div className={`px-6 py-2 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] border-2 ${
+                                t.analysis.urgency === 'Emergency' ? 'bg-red-600 text-white border-red-600' :
+                                t.analysis.urgency === 'High' ? 'bg-amber-500 text-white border-amber-500' :
+                                'bg-blue-600 text-white border-blue-600'
+                              } shadow-lg shadow-current/20`}>
                                 {t.analysis.urgency}
-                              </span>
+                              </div>
                             </div>
-                            <div className="p-6 space-y-6">
-                              <div className="space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Potential Considerations</p>
-                                <div className="grid grid-cols-1 gap-3">
+                            <div className="p-8 space-y-10">
+                              <div className="space-y-5">
+                                <div className="flex items-center gap-3">
+                                  <span className="w-8 h-[1px] bg-blue-600" />
+                                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Potential Conditions</p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
                                   {t.analysis.potentialConditions.map((c, idx) => (
-                                    <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                      <div className="flex items-center justify-between mb-1.5">
-                                        <h4 className="text-sm font-bold text-slate-900">{c.name}</h4>
-                                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{c.likelihood}</span>
+                                    <div key={idx} className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all group">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{c.name}</h4>
+                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{c.likelihood}</span>
+                                        </div>
                                       </div>
-                                      <p className="text-[12px] text-slate-500 leading-relaxed font-medium">{c.description}</p>
+                                      <p className="text-sm text-slate-500 leading-relaxed font-medium">{c.description}</p>
                                     </div>
                                   ))}
                                 </div>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                                <div className="space-y-3">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Next Steps</p>
-                                  <ul className="space-y-2">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-100">
+                                <div className="space-y-5">
+                                  <div className="flex items-center gap-3">
+                                    <span className="w-8 h-[1px] bg-blue-600" />
+                                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Patient Roadmap</p>
+                                  </div>
+                                  <ul className="space-y-4">
                                     {t.analysis.recommendations.map((r, idx) => (
-                                      <li key={idx} className="flex gap-2 text-[12px] text-slate-600 font-medium">
-                                        <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0" />
-                                        {r}
+                                      <li key={idx} className="flex gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                                        <div className="w-6 h-6 rounded-lg bg-green-50 flex items-center justify-center shrink-0 border border-green-100 mt-0.5">
+                                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                        </div>
+                                        <p className="text-[13px] text-slate-600 font-bold leading-relaxed">{r}</p>
                                       </li>
                                     ))}
                                   </ul>
                                 </div>
                                 {t.analysis.disclaimer && (
-                                  <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100/50">
-                                    <p className="text-[11px] text-amber-700/80 italic font-medium leading-relaxed">
-                                      {t.analysis.disclaimer}
-                                    </p>
+                                  <div className="flex flex-col justify-end">
+                                    <div className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100">
+                                      <p className="text-[12px] text-indigo-700/80 italic font-bold leading-relaxed">
+                                        {t.analysis.disclaimer}
+                                      </p>
+                                    </div>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
                         ) : (
-                          <div className={`p-4 rounded-2xl ${
+                          <div className={`p-5 rounded-[2rem] ${
                             t.isUser 
-                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                              : 'bg-white border border-slate-200 text-slate-800'
+                              ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' 
+                              : 'bg-white border border-slate-200 text-slate-800 shadow-sm'
                           }`}>
-                            <p className="text-sm leading-relaxed font-medium">{t.text}</p>
-                            <div className={`mt-2 flex items-center gap-2 ${t.isUser ? 'text-blue-200' : 'text-slate-400'}`}>
-                              <span className="text-[9px] font-bold uppercase tracking-widest">
-                                {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
+                            <p className="text-[15px] leading-relaxed font-bold">{t.text}</p>
+                            <div className={`mt-3 flex items-center justify-between border-t ${t.isUser ? 'border-white/10 pt-2' : 'border-slate-100 pt-2'} `}>
+                              <div className={`flex items-center gap-2 ${t.isUser ? 'text-slate-400' : 'text-slate-400'}`}>
+                                <Clock className="w-3 h-3" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">
+                                  {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
                               {!t.isUser && (
-                                <button onClick={() => speakText(t.text!)} className="hover:text-blue-500 transition-colors">
-                                  <Volume2 className="w-3 h-3" />
+                                <button 
+                                  onClick={() => speakText(t.text!)} 
+                                  className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-100"
+                                >
+                                  <Volume2 className="w-4 h-4" />
                                 </button>
                               )}
                             </div>
@@ -1097,21 +1344,29 @@ Use this information to provide more personalized and relevant health guidance. 
           </div>
 
           {/* Floating Live Captions and Error */}
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-40 pointer-events-none space-y-4">
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-40 pointer-events-none space-y-4">
             <AnimatePresence>
               {errorMessage && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="p-4 rounded-2xl bg-red-600 text-white shadow-xl shadow-red-500/20 flex items-center justify-between pointer-events-auto"
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="p-5 rounded-[2rem] bg-slate-900 text-white shadow-2xl flex items-center justify-between pointer-events-auto border border-slate-800"
                 >
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5" />
-                    <span className="text-sm font-bold">{errorMessage}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                      <AlertCircle className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Error</p>
+                      <span className="text-sm font-bold">{errorMessage}</span>
+                    </div>
                   </div>
-                  <button onClick={() => setErrorMessage(null)} className="p-1 hover:bg-white/20 rounded-lg">
-                    <X className="w-4 h-4" />
+                  <button 
+                    onClick={() => setErrorMessage(null)} 
+                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-400" />
                   </button>
                 </motion.div>
               )}
@@ -1120,29 +1375,40 @@ Use this information to provide more personalized and relevant health guidance. 
             <AnimatePresence>
               {isActive && liveCaption && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="p-5 rounded-2xl bg-white/90 border border-slate-200 shadow-2xl backdrop-blur-xl text-center"
+                  className="p-6 rounded-[2.5rem] bg-white/80 border border-white shadow-2xl backdrop-blur-2xl text-center relative overflow-hidden"
                 >
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Live Captions</span>
+                  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div className="flex gap-1">
+                      <motion.span animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-0.5 bg-blue-500 rounded-full" />
+                      <motion.span animate={{ height: [8, 4, 8] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-0.5 bg-blue-500 rounded-full" />
+                      <motion.span animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-0.5 bg-blue-500 rounded-full" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Voice Recognition</span>
                   </div>
-                  <p className="text-slate-900 font-medium italic">"{liveCaption.text}"</p>
+                  <p className="text-slate-900 text-lg font-bold italic leading-tight">
+                    <span className="opacity-40 italic">"</span>
+                    {liveCaption.text}
+                    <span className="opacity-40 italic">"</span>
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Docked Control Bar */}
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-white via-white/80 to-transparent pt-10 pb-8 px-6 z-30 pointer-events-none">
+          {/* Premium Docked Control Bar */}
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#FAFAFB] via-[#FAFAFB]/90 to-transparent pt-20 pb-10 px-6 z-30 pointer-events-none">
             <div className="max-w-3xl mx-auto w-full pointer-events-auto">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-blue-600 rounded-[2.5rem] blur opacity-10 group-focus-within:opacity-20 transition-opacity" />
-                <div className="relative bg-white border border-slate-200 rounded-[2rem] shadow-xl shadow-slate-200/50 p-3 pl-6 flex items-center gap-4">
-                  <div className="flex-1 flex items-center gap-4">
-                    <Activity className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-slate-300'} shrink-0`} />
+              <div className="relative">
+                <div className="absolute -inset-4 bg-blue-600/5 blur-[40px] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                <div className="relative bg-white border border-slate-200/60 rounded-[2.5rem] shadow-2xl shadow-slate-200/60 p-3 pl-8 flex items-center gap-4 backdrop-blur-md">
+                  <div className="flex-1 flex items-center gap-5">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${isActive ? 'bg-blue-600 shadow-lg shadow-blue-600/20' : 'bg-slate-100'}`}>
+                      <Activity className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    </div>
                     <form 
                       onSubmit={handleSendText}
                       className="flex-1"
@@ -1151,8 +1417,8 @@ Use this information to provide more personalized and relevant health guidance. 
                         type="text"
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
-                        placeholder="Type a symptom or question..."
-                        className="w-full bg-transparent border-none outline-none text-base font-semibold text-slate-800 placeholder:text-slate-400"
+                        placeholder="Consult via secure text..."
+                        className="w-full bg-transparent border-none outline-none text-base font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-medium"
                       />
                     </form>
                   </div>
@@ -1163,11 +1429,11 @@ Use this information to provide more personalized and relevant health guidance. 
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsMuted(!isMuted)}
                       disabled={!isActive}
-                      className={`p-3 rounded-xl transition-all ${
+                      className={`w-12 h-12 rounded-2xl transition-all flex items-center justify-center ${
                         isMuted 
-                          ? 'bg-red-50 text-red-500' 
-                          : 'bg-slate-50 text-slate-500 hover:text-blue-600'
-                      } disabled:opacity-20`}
+                          ? 'bg-red-50 text-red-500 border border-red-100' 
+                          : 'bg-slate-50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 border border-slate-100'
+                      } disabled:opacity-30 disabled:grayscale`}
                     >
                       {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                     </motion.button>
@@ -1175,41 +1441,40 @@ Use this information to provide more personalized and relevant health guidance. 
                     <button
                       onClick={isActive ? endSession : () => startSession()}
                       disabled={status === 'connecting'}
-                      className={`h-12 px-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center gap-3 ${
+                      className={`h-14 px-8 rounded-[1.75rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl flex items-center gap-3 overflow-hidden relative group/btn ${
                         isActive 
-                          ? 'bg-slate-900 text-white shadow-slate-400/20' 
-                          : 'bg-blue-600 text-white shadow-blue-500/20'
+                          ? 'bg-slate-900 text-white shadow-slate-900/20' 
+                          : 'bg-blue-600 text-white shadow-blue-600/30 hover:bg-blue-700'
                       } disabled:opacity-50`}
                     >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
                       {status === 'connecting' ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : isActive ? (
-                        'End'
+                        'Terminate'
                       ) : (
                         <>
                           <Volume2 className="w-4 h-4" />
-                          Consult
+                          Initialize
                         </>
                       )}
                     </button>
                   </div>
                 </div>
 
-                {/* Pulse visualization below the bar */}
+                {/* Hardware-style visualization */}
                 {isActive && (
-                  <div className="absolute -bottom-1 inset-x-12 h-1 overflow-hidden pointer-events-none">
-                    <div className="flex items-center justify-center gap-1">
-                      {Array.from({ length: 40 }).map((_, i) => (
-                        <motion.div
-                          key={i}
-                          animate={{ 
-                            height: (aiVolume > 0.01 ? aiVolume * 40 : userVolume * 40) + 2
-                          }}
-                          className="w-0.5 rounded-full bg-blue-500/40"
-                          transition={{ duration: 0.1, repeat: Infinity, repeatType: 'reverse', delay: i * 0.01 }}
-                        />
-                      ))}
-                    </div>
+                  <div className="absolute -bottom-4 inset-x-16 h-8 flex items-end justify-center gap-1.5 pointer-events-none opacity-40">
+                    {Array.from({ length: 32 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{ 
+                          height: (aiVolume > 0.01 ? aiVolume * 30 : userVolume * 30) + 4
+                        }}
+                        className="w-1 rounded-t-full bg-blue-600"
+                        transition={{ duration: 0.1, repeat: Infinity, repeatType: 'reverse', delay: i * 0.005 }}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -1307,6 +1572,33 @@ Use this information to provide more personalized and relevant health guidance. 
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+      <AnimatePresence>
+        {showMedications && user && (
+          <div className="fixed inset-0 z-[200] flex justify-end">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMedications(false)}
+              className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-md bg-white shadow-2xl h-full border-l border-slate-200 z-[201]"
+            >
+              <MedicationPanel 
+                userId={user.uid} 
+                medications={medications} 
+                onClose={() => setShowMedications(false)} 
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar {

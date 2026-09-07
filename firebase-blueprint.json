@@ -49,12 +49,34 @@
         "timestamp": { "type": "integer" }
       },
       "required": ["userId", "sessionId", "isUser", "timestamp"]
+    },
+    "Medication": {
+      "title": "Medication",
+      "description": "A medication reminder for the user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string", "description": "Name of the medication." },
+        "dosage": { "type": "string", "description": "Dosage amount (e.g., 500mg)." },
+        "frequency": { "type": "string", "description": "How often to take (e.g., Daily, Twice a day)." },
+        "times": { "type": "array", "items": { "type": "string" }, "description": "Specific times to take (e.g., 08:00, 20:00)." },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "integer" },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["userId", "name", "dosage", "frequency", "times", "createdAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
       "description": "User profile documents."
+    },
+    "/users/{userId}/medications/{medicationId}": {
+      "schema": "Medication",
+      "description": "User medication reminders."
     },
     "/sessions/{sessionId}": {
       "schema": "Session",

@@ -42,6 +42,26 @@ service cloud.firestore {
         incoming().diff(existing()).affectedKeys().hasOnly(['healthProfile', 'updatedAt']) ||
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt'])
       );
+
+      // --- Medications Collection ---
+      match /medications/{medicationId} {
+        function isValidMedication(data) {
+          return data.keys().hasAll(['userId', 'name', 'dosage', 'frequency', 'times', 'createdAt']) &&
+                 data.userId == request.auth.uid &&
+                 data.name is string && data.name.size() <= 256 &&
+                 data.dosage is string && data.dosage.size() <= 128 &&
+                 data.frequency is string &&
+                 data.times is list &&
+                 data.createdAt is int;
+        }
+
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidMedication(incoming());
+        allow update: if isOwner(userId) && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'dosage', 'frequency', 'times', 'notes', 'updatedAt', 'endDate'])
+        );
+        allow delete: if isOwner(userId);
+      }
     }
 
     // --- Sessions Collection ---
