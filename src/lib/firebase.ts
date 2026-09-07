@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 
-// Default configuration fallback so CI/CD builds (like Vercel) succeed even if config file is not committed
+// Reliable configuration for local, container, and Vercel CI/CD deployments
 const defaultFirebaseConfig: Record<string, string> = {
   projectId: "gen-lang-client-0750947491",
   appId: "1:795885399173:web:155a06ff9de5eaccd28dec",
@@ -13,24 +13,14 @@ const defaultFirebaseConfig: Record<string, string> = {
   messagingSenderId: "795885399173"
 };
 
-// Safely probe for firebase-applet-config.json with import.meta.glob to prevent Rollup resolve errors when file is not present in Git
-let fileConfig: Record<string, any> = {};
-const configFiles = import.meta.glob<Record<string, any>>(['/firebase-applet-config.json', '../../firebase-applet-config.json'], { eager: true });
-for (const key of Object.keys(configFiles)) {
-  if (configFiles[key]) {
-    fileConfig = configFiles[key].default || configFiles[key];
-    break;
-  }
-}
-
 const config = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fileConfig.apiKey || defaultFirebaseConfig.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || defaultFirebaseConfig.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId || defaultFirebaseConfig.projectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || defaultFirebaseConfig.storageBucket,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || defaultFirebaseConfig.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || fileConfig.appId || defaultFirebaseConfig.appId,
-  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || fileConfig.firestoreDatabaseId || defaultFirebaseConfig.firestoreDatabaseId
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || defaultFirebaseConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || defaultFirebaseConfig.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || defaultFirebaseConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || defaultFirebaseConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || defaultFirebaseConfig.appId,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || defaultFirebaseConfig.firestoreDatabaseId
 };
 
 const app = initializeApp(config);
