@@ -1,7 +1,10 @@
 {
   "name": "RapidAid - Voice Health Assistant",
-  "description": "RapidAid is a high-fidelity, voice-activated medical assistant. Featuring real-time health analysis, secure consultation protocols, personalized patient identity management, and intelligent medication reminders.",
+  "description": "RapidAid is an intelligent clinical healthcare assistant featuring an independent multi-turn medical chat and a fully integrated real-time voice companion on the side with intelligent medication management and symptom triage.",
   "requestFramePermissions": [
     "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]
 }
