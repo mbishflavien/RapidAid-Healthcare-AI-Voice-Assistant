@@ -124,7 +124,7 @@ export default function App() {
   // Sessions and conversation history
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [guestMessages, setGuestMessages] = useState<Transcription[]>([]);
+  const [messages, setMessages] = useState<Transcription[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   // Voice Companion on the side
@@ -145,17 +145,24 @@ export default function App() {
 
   // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isGeneratingRef = useRef<boolean>(false);
+  const currentSessionIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Active messages list (user Firestore session vs guest state)
+  // Keep currentSessionIdRef synchronized
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
+
+  // Active session metadata & active messages list
   const activeSession = sessions.find(s => s.id === currentSessionId);
-  const currentMessages = user ? (activeSession?.transcriptions || []) : guestMessages;
+  const currentMessages = messages;
 
   // Auto-scroll to bottom of conversation
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentMessages, isGenerating]);
+  }, [messages, isGenerating]);
 
   // Medication reminders checker
   useEffect(() => {
@@ -175,11 +182,12 @@ export default function App() {
     return () => clearInterval(interval);
   }, [medications]);
 
-  // Subscribe to User's Medications & Consultations
+  // Subscribe to User's Medications & Consultations Metadata
   useEffect(() => {
     if (!user) {
       setSessions([]);
       setCurrentSessionId(null);
+      currentSessionIdRef.current = null;
       setMedications([]);
       return;
     }
@@ -199,14 +207,15 @@ export default function App() {
       const sessionData: Session[] = snapshot.docs.map(sessionDoc => ({
         id: sessionDoc.id,
         title: sessionDoc.data().title || 'Medical Consultation',
-        timestamp: sessionDoc.data().timestamp || Date.now(),
-        transcriptions: []
+        timestamp: sessionDoc.data().timestamp || Date.now()
       }));
       setSessions(sessionData);
 
-      // Auto-select latest session if none selected
-      if (sessionData.length > 0 && !currentSessionId) {
-        setCurrentSessionId(sessionData[0].id);
+      // Auto-select latest session if none selected and not actively generating
+      if (sessionData.length > 0 && !currentSessionIdRef.current && !isGeneratingRef.current) {
+        const initialId = sessionData[0].id;
+        setCurrentSessionId(initialId);
+        currentSessionIdRef.current = initialId;
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'sessions');
@@ -220,26 +229,31 @@ export default function App() {
 
   // Subscribe to Messages for ACTIVE Session
   useEffect(() => {
-    if (!user || !currentSessionId) return;
+    if (!user) return;
+    if (!currentSessionId) {
+      if (!isGeneratingRef.current) {
+        setMessages([]);
+      }
+      return;
+    }
 
     const q = query(
       collection(db, `sessions/${currentSessionId}/messages`),
-      where('userId', '==', user.uid),
-      orderBy('timestamp', 'asc')
+      where('userId', '==', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Do not overwrite local state while response is actively streaming
+      if (isGeneratingRef.current) return;
+
       const msgs = snapshot.docs.map(d => ({
         id: d.id,
         ...d.data()
       } as Transcription));
 
-      setSessions(prev => prev.map(s => {
-        if (s.id === currentSessionId) {
-          return { ...s, transcriptions: msgs };
-        }
-        return s;
-      }));
+      // Sort chronologically in memory (avoids missing composite index errors)
+      msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      setMessages(msgs);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, `sessions/${currentSessionId}/messages`);
     });
@@ -252,26 +266,13 @@ export default function App() {
     if (isGenerating && abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsGenerating(false);
+      isGeneratingRef.current = false;
     }
 
-    if (!user) {
-      setGuestMessages([]);
-      setShowHistory(false);
-      return;
-    }
-
-    try {
-      const sessionRef = await addDoc(collection(db, 'sessions'), {
-        userId: user.uid,
-        title: `Consultation ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
-        timestamp: Date.now(),
-        updatedAt: serverTimestamp()
-      });
-      setCurrentSessionId(sessionRef.id);
-      setShowHistory(false);
-    } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, 'sessions');
-    }
+    setMessages([]);
+    setCurrentSessionId(null);
+    currentSessionIdRef.current = null;
+    setShowHistory(false);
   };
 
   const deleteSession = async (id: string, e: React.MouseEvent) => {
@@ -281,7 +282,12 @@ export default function App() {
         await deleteDoc(doc(db, 'sessions', id));
         if (currentSessionId === id) {
           const remaining = sessions.filter(s => s.id !== id);
-          setCurrentSessionId(remaining.length > 0 ? remaining[0].id : null);
+          const nextId = remaining.length > 0 ? remaining[0].id : null;
+          setCurrentSessionId(nextId);
+          currentSessionIdRef.current = nextId;
+          if (!nextId) {
+            setMessages([]);
+          }
         }
       } catch (e) {
         handleFirestoreError(e, OperationType.DELETE, `sessions/${id}`);
@@ -289,14 +295,13 @@ export default function App() {
     }
   };
 
-  // Add transcription (from Voice Companion or text)
+  // Add transcription (from Voice Companion or voice speech)
   const addTranscriptionToRecord = useCallback(async (transcription: Transcription) => {
-    if (!user) {
-      setGuestMessages(prev => [...prev, transcription]);
-      return;
-    }
+    setMessages(prev => [...prev, transcription]);
 
-    let activeId = currentSessionId;
+    if (!user) return;
+
+    let activeId = currentSessionIdRef.current;
     if (!activeId) {
       try {
         const sessionRef = await addDoc(collection(db, 'sessions'), {
@@ -306,6 +311,7 @@ export default function App() {
           updatedAt: serverTimestamp()
         });
         activeId = sessionRef.id;
+        currentSessionIdRef.current = activeId;
         setCurrentSessionId(activeId);
       } catch (e) {
         handleFirestoreError(e, OperationType.CREATE, 'sessions');
@@ -322,7 +328,7 @@ export default function App() {
     } catch (e) {
       handleFirestoreError(e, OperationType.CREATE, `sessions/${activeId}/messages`);
     }
-  }, [user, currentSessionId]);
+  }, [user]);
 
   // Primary Clinical Text Chat Handler
   const handleSendText = async (e?: React.FormEvent, customPrompt?: string) => {
@@ -353,20 +359,30 @@ export default function App() {
     };
 
     // Update UI state for instant response
-    if (!user) {
-      setGuestMessages(prev => [...prev, userMessage, initialAssistantMessage]);
-    } else {
-      setSessions(prev => prev.map(s => {
-        if (s.id === currentSessionId) {
-          return { ...s, transcriptions: [...s.transcriptions, userMessage, initialAssistantMessage] };
-        }
-        return s;
-      }));
-    }
+    setMessages(prev => [...prev, userMessage, initialAssistantMessage]);
 
     setIsGenerating(true);
+    isGeneratingRef.current = true;
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
+    // If user is authenticated, ensure a session document is created immediately
+    let activeId = currentSessionIdRef.current;
+    if (user && !activeId) {
+      try {
+        const sessionRef = await addDoc(collection(db, 'sessions'), {
+          userId: user.uid,
+          title: query.slice(0, 32) + (query.length > 32 ? '...' : ''),
+          timestamp: Date.now(),
+          updatedAt: serverTimestamp()
+        });
+        activeId = sessionRef.id;
+        currentSessionIdRef.current = activeId;
+        setCurrentSessionId(activeId);
+      } catch (err) {
+        console.warn("Could not create session document:", err);
+      }
+    }
 
     try {
       let currentAccumulated = "";
@@ -374,29 +390,15 @@ export default function App() {
 
       const result = await streamClinicalChat({
         userMessage: query,
-        history: currentMessages,
+        history: messages,
         profile: userData?.healthProfile,
         activeMedications: medications.map(m => m.name),
         signal: controller.signal,
         onChunk: (chunkText) => {
           currentAccumulated = chunkText;
-          if (!user) {
-            setGuestMessages(prev => prev.map(m => 
-              m.id === assistantMessageId ? { ...m, text: chunkText } : m
-            ));
-          } else {
-            setSessions(prev => prev.map(s => {
-              if (s.id === currentSessionId) {
-                return {
-                  ...s,
-                  transcriptions: s.transcriptions.map(m =>
-                    m.id === assistantMessageId ? { ...m, text: chunkText } : m
-                  )
-                };
-              }
-              return s;
-            }));
-          }
+          setMessages(prev => prev.map(m => 
+            m.id === assistantMessageId ? { ...m, text: chunkText } : m
+          ));
         },
         onAnalysis: (analysis) => {
           capturedAnalysis = analysis;
@@ -404,6 +406,7 @@ export default function App() {
       });
 
       const finalAssistantMessage: Transcription = {
+        id: assistantMessageId,
         text: result.text || currentAccumulated,
         analysis: result.analysis || capturedAnalysis,
         isUser: false,
@@ -411,58 +414,57 @@ export default function App() {
         fromVoice: false
       };
 
-      // Persist permanently
-      if (user) {
-        let activeId = currentSessionId;
-        if (!activeId) {
-          const sessionRef = await addDoc(collection(db, 'sessions'), {
-            userId: user.uid,
-            title: query.slice(0, 32) + (query.length > 32 ? '...' : ''),
-            timestamp: Date.now(),
-            updatedAt: serverTimestamp()
+      // Set final message content in state
+      setMessages(prev => prev.map(m =>
+        m.id === assistantMessageId ? finalAssistantMessage : m
+      ));
+
+      // Persist permanently to Firestore if logged in
+      if (user && activeId) {
+        try {
+          // Save User Msg
+          await addDoc(collection(db, `sessions/${activeId}/messages`), {
+            text: userMessage.text,
+            isUser: true,
+            timestamp: userMessage.timestamp,
+            sessionId: activeId,
+            userId: user.uid
           });
-          activeId = sessionRef.id;
-          setCurrentSessionId(activeId);
-        }
 
-        // Save User Msg
-        await addDoc(collection(db, `sessions/${activeId}/messages`), {
-          text: userMessage.text,
-          isUser: true,
-          timestamp: userMessage.timestamp,
-          sessionId: activeId,
-          userId: user.uid
-        });
-
-        // Save Assistant Msg
-        await addDoc(collection(db, `sessions/${activeId}/messages`), {
-          text: finalAssistantMessage.text,
-          analysis: finalAssistantMessage.analysis || null,
-          isUser: false,
-          timestamp: finalAssistantMessage.timestamp,
-          sessionId: activeId,
-          userId: user.uid
-        });
-
-        // Update Title if it was initial question
-        if (currentMessages.length <= 2) {
-          await updateDoc(doc(db, 'sessions', activeId), {
-            title: query.slice(0, 32) + (query.length > 32 ? '...' : '')
+          // Save Assistant Msg
+          await addDoc(collection(db, `sessions/${activeId}/messages`), {
+            text: finalAssistantMessage.text,
+            analysis: finalAssistantMessage.analysis || null,
+            isUser: false,
+            timestamp: finalAssistantMessage.timestamp,
+            sessionId: activeId,
+            userId: user.uid
           });
+
+          // Update Title if it was initial question
+          if (messages.length <= 2) {
+            await updateDoc(doc(db, 'sessions', activeId), {
+              title: query.slice(0, 32) + (query.length > 32 ? '...' : ''),
+              updatedAt: serverTimestamp()
+            });
+          } else {
+            await updateDoc(doc(db, 'sessions', activeId), {
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (saveErr) {
+          console.error("Error saving consultation messages:", saveErr);
         }
-      } else {
-        // Finalize guest state
-        setGuestMessages(prev => prev.map(m =>
-          m.id === assistantMessageId ? finalAssistantMessage : m
-        ));
       }
     } catch (err: any) {
       if (!controller.signal.aborted) {
         console.error("Clinical chat stream failed:", err);
         setErrorMessage(err?.message || "Could not generate clinical consultation. Please try again.");
+        setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
       }
     } finally {
       setIsGenerating(false);
+      isGeneratingRef.current = false;
       abortControllerRef.current = null;
     }
   };
@@ -473,6 +475,7 @@ export default function App() {
       abortControllerRef.current = null;
     }
     setIsGenerating(false);
+    isGeneratingRef.current = false;
   };
 
   // Text-To-Speech
@@ -536,16 +539,21 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const clearCurrentChat = () => {
+  const clearCurrentChat = async () => {
     if (window.confirm("Clear this consultation chat?")) {
-      if (!user) {
-        setGuestMessages([]);
-      } else if (currentSessionId) {
-        // Clear active session messages in Firestore
-        const q = query(collection(db, `sessions/${currentSessionId}/messages`));
-        getDocs(q).then(snap => {
-          snap.forEach(d => deleteDoc(d.ref));
-        });
+      setMessages([]);
+      if (user && currentSessionId) {
+        try {
+          const q = query(
+            collection(db, `sessions/${currentSessionId}/messages`),
+            where('userId', '==', user.uid)
+          );
+          const snap = await getDocs(q);
+          const deletions = snap.docs.map(d => deleteDoc(d.ref));
+          await Promise.all(deletions);
+        } catch (e) {
+          console.error("Error clearing consultation messages:", e);
+        }
       }
     }
   };
@@ -604,7 +612,13 @@ export default function App() {
                   <button
                     key={session.id}
                     onClick={() => {
+                      if (isGenerating && abortControllerRef.current) {
+                        abortControllerRef.current.abort();
+                        setIsGenerating(false);
+                        isGeneratingRef.current = false;
+                      }
                       setCurrentSessionId(session.id);
+                      currentSessionIdRef.current = session.id;
                       if (window.innerWidth < 1024) setShowHistory(false);
                     }}
                     className={`w-full p-3.5 rounded-2xl text-left transition-all group flex flex-col gap-1 border ${

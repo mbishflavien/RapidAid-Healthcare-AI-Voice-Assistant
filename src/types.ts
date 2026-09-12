@@ -19,7 +19,7 @@ export interface Session {
   id: string;
   title: string;
   timestamp: number;
-  transcriptions: Transcription[];
+  transcriptions?: Transcription[];
 }
 
 export interface HealthProfile {
