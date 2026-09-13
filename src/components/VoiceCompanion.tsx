@@ -519,23 +519,23 @@ SAFETY RULES:
 
   return (
     <div className="w-full lg:w-96 border-l border-slate-200 bg-white flex flex-col h-full shrink-0 z-30 shadow-xl lg:shadow-none">
-      {/* Voice Companion Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+      {/* Telehealth Audio Station Header */}
+      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90">
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-            isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-slate-100 text-slate-500'
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+            isActive ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-200 text-slate-600'
           }`}>
             <Radio className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-900">Voice Companion</h3>
+              <h3 className="text-xs font-bold text-slate-900 tracking-tight">Telehealth Audio Station</h3>
               <span className={`w-2 h-2 rounded-full ${
-                isActive ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-300'
+                isActive ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-300'
               }`} />
             </div>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-              {status === 'active' ? 'Live Audio Link' : status === 'connecting' ? 'Calibrating...' : 'Side Companion'}
+            <p className="text-[10px] text-slate-500 font-mono font-medium">
+              {status === 'active' ? 'FULL-DUPLEX 16kHz • LIVE' : status === 'connecting' ? 'CONNECTING PROTOCOL...' : 'STANDBY • READY'}
             </p>
           </div>
         </div>
@@ -543,47 +543,59 @@ SAFETY RULES:
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setShowVoicePicker(!showVoicePicker)}
-            className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-sm"
-            title="Select Voice Profile"
+            className="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-xs"
+            title="Select Clinical Voice Persona"
           >
             <span>{selectedVoice}</span>
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition-colors"
-            title="Collapse Voice Panel"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+            title="Collapse Audio Panel"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Voice Picker Dropdown */}
+      {/* Voice Persona Dropdown */}
       <AnimatePresence>
         {showVoicePicker && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="border-b border-slate-100 bg-white p-3 space-y-1 overflow-hidden"
+            className="border-b border-slate-200 bg-white p-3 space-y-1.5 overflow-hidden"
           >
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Select Persona</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {VOICES.map(voice => (
+            <div className="flex items-center justify-between px-1 mb-1">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Clinical Persona</p>
+              <span className="text-[10px] text-slate-400 font-mono">Gemini Live Audio</span>
+            </div>
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                { name: 'Aoede', role: 'Triage Specialist (Calm & Precise)' },
+                { name: 'Puck', role: 'General Practice (Direct & Attentive)' },
+                { name: 'Fenrir', role: 'Emergency Protocols (Fast & Authoritative)' },
+                { name: 'Charon', role: 'Trauma & Critical Care (Steady & Reassuring)' },
+                { name: 'Kore', role: 'Pediatric & Family Consultation (Gentle)' }
+              ].map(item => (
                 <button
-                  key={voice}
+                  key={item.name}
                   onClick={() => {
-                    setSelectedVoice(voice);
+                    setSelectedVoice(item.name);
                     setShowVoicePicker(false);
                   }}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold text-left flex items-center justify-between transition-colors ${
-                    selectedVoice === voice
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                  className={`px-3 py-2 rounded-lg text-xs font-medium text-left flex items-center justify-between transition-colors ${
+                    selectedVoice === item.name
+                      ? 'bg-teal-50 text-teal-900 border border-teal-200'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-transparent'
                   }`}
                 >
-                  <span>{voice}</span>
-                  {selectedVoice === voice && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <div>
+                    <span className="font-bold">{item.name}</span>
+                    <span className="text-[10px] text-slate-500 block">{item.role}</span>
+                  </div>
+                  {selectedVoice === item.name && <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />}
                 </button>
               ))}
             </div>
@@ -591,85 +603,104 @@ SAFETY RULES:
         )}
       </AnimatePresence>
 
-      {/* Voice Visualizer / Stage */}
-      <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
-        <div className="space-y-6">
-          {/* Main Visualizer Sphere / Waveform */}
-          <div className="relative p-8 rounded-3xl bg-gradient-to-b from-slate-50 to-blue-50/40 border border-slate-200/80 flex flex-col items-center justify-center min-h-[220px] text-center overflow-hidden">
+      {/* Audio Visualizer / Monitor */}
+      <div className="p-5 flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+        <div className="space-y-4">
+          {/* Main Visualizer Stage (Oscilloscope & Vitals Style) */}
+          <div className="relative p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center min-h-[220px] text-center overflow-hidden medical-ecg-bg">
+            {/* Top Telemetry Overlay */}
+            <div className="absolute top-2.5 inset-x-3 flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-600'}`} />
+                {isActive ? 'CHANNEL: 16.0 kHz PCM' : 'CHANNEL: INACTIVE'}
+              </span>
+              <span>{isActive ? 'LATENCY: <120ms' : 'OFFLINE'}</span>
+            </div>
+
             {isActive ? (
               <>
-                <div className="relative mb-6">
-                  {/* Glowing dynamic concentric rings */}
+                <div className="relative my-4">
+                  {/* Concentric Telemetry Ripple */}
                   <motion.div 
-                    animate={{ scale: [1, 1.25, 1], opacity: [0.15, 0.4, 0.15] }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                    className="absolute -inset-6 rounded-full bg-blue-500 blur-xl"
+                    className="absolute -inset-4 rounded-full bg-teal-500 blur-md"
                   />
-                  <div className="w-24 h-24 rounded-full bg-white border-2 border-blue-200 shadow-xl flex items-center justify-center relative z-10">
-                    <Activity className="w-10 h-10 text-blue-600" />
+                  <div className="w-20 h-20 rounded-full bg-slate-800 border border-teal-400/40 shadow-xl flex items-center justify-center relative z-10">
+                    <Activity className="w-8 h-8 text-teal-400" />
                   </div>
                 </div>
 
-                {/* Animated Audio Spectrum Bars */}
-                <div className="flex items-end justify-center gap-1 h-12 w-full px-4">
-                  {Array.from({ length: 24 }).map((_, i) => (
+                {/* Animated Clinical Audio Spectrum */}
+                <div className="flex items-end justify-center gap-1 h-10 w-full px-2">
+                  {Array.from({ length: 22 }).map((_, i) => (
                     <motion.div
                       key={i}
                       animate={{
-                        height: Math.max(6, Math.min(48, (aiVolume > 0.01 ? aiVolume * 65 : userVolume * 65) * (Math.sin(i / 2) + 1.2)))
+                        height: Math.max(4, Math.min(38, (aiVolume > 0.01 ? aiVolume * 55 : userVolume * 55) * (Math.sin(i / 1.8) + 1.2)))
                       }}
                       transition={{ duration: 0.08 }}
-                      className={`w-1.5 rounded-full ${
-                        aiVolume > 0.01 ? 'bg-blue-600' : 'bg-slate-700'
+                      className={`w-1.5 rounded-xs ${
+                        aiVolume > 0.01 ? 'bg-teal-400' : 'bg-emerald-400'
                       }`}
                     />
                   ))}
                 </div>
 
-                <p className="text-xs font-bold text-slate-700 mt-4">
-                  {aiVolume > 0.01 ? "RapidAid Speaking..." : isMuted ? "Microphone Muted" : "Listening to you..."}
-                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <p className="text-xs font-mono font-medium text-slate-200">
+                    {aiVolume > 0.01 ? "CLINICAL AI SPEAKING..." : isMuted ? "MIC MUTED" : "LISTENING TO PATIENT..."}
+                  </p>
+                </div>
               </>
             ) : (
-              <>
-                <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center mb-4 text-slate-400">
-                  <Mic className="w-8 h-8" />
+              <div className="py-4 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-3 text-slate-400">
+                  <Mic className="w-7 h-7 text-teal-400" />
                 </div>
-                <h4 className="text-sm font-bold text-slate-900">Hands-Free Voice</h4>
-                <p className="text-xs text-slate-500 font-medium max-w-[200px] mt-1">
-                  Start voice call to converse naturally while referencing your chat.
+                <h4 className="text-sm font-bold text-white tracking-tight">Telehealth Audio Channel</h4>
+                <p className="text-xs text-slate-400 font-medium max-w-[210px] mt-1 leading-relaxed">
+                  Start hands-free voice consultation to speak directly with the clinical decision model.
                 </p>
-              </>
+              </div>
             )}
 
-            {/* Language Tag */}
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-slate-200 text-[11px] font-bold text-slate-600 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              <span>Language: {detectedLanguage}</span>
+            {/* Language & Protocol Tag */}
+            <div className="mt-3 inline-flex items-center gap-2 px-2.5 py-0.5 rounded bg-slate-800/90 border border-slate-700 text-[10px] font-mono text-slate-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+              <span>LANG: {detectedLanguage.toUpperCase()}</span>
+              <span className="text-slate-500">•</span>
+              <span>ENC: AES-256</span>
             </div>
           </div>
 
-          {/* Live Subtitle / Caption Feed */}
+          {/* Clinical Dictation Tape (Live Subtitle Feed) */}
           {liveCaption && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-3.5 rounded-2xl bg-slate-900 text-white shadow-lg text-xs leading-relaxed"
+              className="p-3.5 rounded-xl bg-slate-900 text-white border border-slate-800 shadow-sm text-xs leading-relaxed"
             >
-              <span className="text-[9px] uppercase tracking-wider font-black text-blue-400 block mb-1">
-                {liveCaption.isUser ? "You Spoke" : "RapidAid Voice"}
-              </span>
-              <p className="font-medium italic">"{liveCaption.text}"</p>
+              <div className="flex items-center justify-between pb-1 mb-1 border-b border-slate-800">
+                <span className="text-[9px] uppercase tracking-wider font-mono font-bold text-teal-400">
+                  {liveCaption.isUser ? "PATIENT DICTATION" : "CLINICAL AI ADVICE"}
+                </span>
+                <span className="text-[9px] font-mono text-slate-400">
+                  {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              </div>
+              <p className="font-mono text-[11px] text-slate-200">"{liveCaption.text}"</p>
             </motion.div>
           )}
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
               <div className="flex-1">
-                <span className="font-bold block">Voice Error</span>
-                <span className="font-medium">{errorMessage}</span>
+                <span className="font-bold block">Audio Protocol Alert</span>
+                <span className="font-medium text-[11px]">{errorMessage}</span>
               </div>
               <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600">
                 <X className="w-3.5 h-3.5" />
@@ -677,88 +708,88 @@ SAFETY RULES:
             </div>
           )}
 
-          {/* Quick Voice Tips */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 text-xs space-y-1.5">
-            <span className="font-bold text-slate-900 flex items-center gap-1.5 text-[11px]">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Voice Capabilities:
+          {/* Clinical Audio Protocol Guidelines */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs space-y-1.5">
+            <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11px]">
+              <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+              Clinical Voice Capabilities:
             </span>
             <ul className="text-[11px] text-slate-500 space-y-1 list-disc pl-4 font-medium">
-              <li>Speak naturally in English, Spanish, French, etc.</li>
-              <li>Ask "Remind me to take Amoxicillin at 2 PM"</li>
-              <li>Transcriptions sync automatically to your main chat</li>
+              <li>Natural hands-free reporting of ongoing symptoms & vitals</li>
+              <li>Medication dosage reminders and intake logging</li>
+              <li>Dictated advice automatically registers into patient chart notes</li>
             </ul>
           </div>
         </div>
 
-        {/* Voice Companion Bottom Controls */}
-        <div className="pt-6 border-t border-slate-100 space-y-3">
+        {/* Telehealth Audio Controls */}
+        <div className="pt-4 border-t border-slate-200 space-y-2.5">
           <div className="flex items-center gap-2">
             {/* Mic Mute */}
             <button
               onClick={() => setIsMuted(!isMuted)}
               disabled={!isActive}
-              className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${
+              className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
                 isMuted
                   ? 'bg-red-50 border-red-200 text-red-600'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               } disabled:opacity-40 disabled:pointer-events-none`}
               title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             >
-              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
 
             {/* Speaker Output Mute */}
             <button
               onClick={() => setIsSpeakerMuted(!isSpeakerMuted)}
               disabled={!isActive}
-              className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${
+              className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
                 isSpeakerMuted
                   ? 'bg-amber-50 border-amber-200 text-amber-600'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               } disabled:opacity-40 disabled:pointer-events-none`}
-              title={isSpeakerMuted ? "Unmute Audio Output" : "Mute Audio Output"}
+              title={isSpeakerMuted ? "Mute Speaker Output" : "Unmute Speaker Output"}
             >
-              {isSpeakerMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              {isSpeakerMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
 
             {/* Primary Start / Terminate Call Button */}
             <button
               onClick={isActive ? endSession : startVoiceSession}
               disabled={status === 'connecting'}
-              className={`flex-1 py-3.5 px-4 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs ${
                 isActive
-                  ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/10'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'
+                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  : 'bg-teal-700 text-white hover:bg-teal-800'
               } disabled:opacity-50`}
             >
               {status === 'connecting' ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : isActive ? (
                 <>
-                  <Activity className="w-4 h-4" />
-                  <span>End Voice Call</span>
+                  <Activity className="w-4 h-4 text-teal-400" />
+                  <span>Disconnect Audio</span>
                 </>
               ) : (
                 <>
                   <Mic className="w-4 h-4" />
-                  <span>Start Voice Call</span>
+                  <span>Connect Audio Link</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Emergency Dispatch Button */}
+          {/* Emergency SOS Protocol Button */}
           <button
             onClick={() => {
-              if (window.confirm("Do you want to initiate emergency call to 911?")) {
+              if (window.confirm("CRITICAL EMERGENCY OVERRIDE: Do you require immediate 911 dispatch?")) {
                 window.location.href = "tel:911";
               }
             }}
-            className="w-full py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 px-3 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold transition-colors flex items-center justify-center gap-2"
           >
             <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
-            <span>Emergency SOS (911)</span>
+            <span>Emergency 911 Protocol Override</span>
           </button>
         </div>
       </div>

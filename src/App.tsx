@@ -31,7 +31,9 @@ import {
   Check, 
   Square, 
   Sparkles, 
-  Radio 
+  Radio,
+  FileText,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
@@ -95,24 +97,24 @@ const MEDICAL_RESOURCES = [
 
 const SUGGESTED_PROMPTS = [
   {
-    icon: "🤒",
-    title: "Symptom Evaluation",
-    prompt: "I have had a mild fever (100.8°F), body aches, and a scratchy dry cough for 2 days. Can you evaluate my symptoms?"
+    icon: "🩺",
+    title: "Acute Symptom Triage",
+    prompt: "Patient presenting with low-grade fever (100.8°F), diffuse myalgias, and dry cough for 48 hours. Please provide clinical triage assessment and red flags."
   },
   {
     icon: "💊",
-    title: "Medication Safety",
-    prompt: "Can I take ibuprofen for a headache if I am already taking blood pressure medication?"
+    title: "Pharmacotherapy Review",
+    prompt: "Review potential contraindications or drug-drug interactions between oral NSAIDs (ibuprofen) and ACE inhibitors (lisinopril)."
   },
   {
     icon: "🫀",
-    title: "Chest Tightness Triage",
-    prompt: "What are the key clinical differences between anxiety-induced chest tightness and a cardiovascular issue?"
+    title: "Cardiovascular vs. Non-Cardiac Triage",
+    prompt: "Provide diagnostic differentiation guidelines between acute musculoskeletal/anxiety-induced precordial chest discomfort and acute coronary syndromes."
   },
   {
     icon: "🩹",
-    title: "First Aid Protocol",
-    prompt: "What is the recommended first aid procedure for a minor second-degree steam burn on the forearm?"
+    title: "Wound & Burn Care Protocol",
+    prompt: "Outline standard clinical first-line management protocol for a partial-thickness (second-degree) thermal steam burn on the forearm."
   }
 ];
 
@@ -559,53 +561,60 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-500/20 overflow-hidden">
-      {/* Consultations History Drawer (Left) */}
+    <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500/20 overflow-hidden">
+      {/* Consultations / Medical Record History Drawer (Left) */}
       <motion.aside
         initial={false}
         animate={{ width: showHistory ? 320 : 0, opacity: showHistory ? 1 : 0 }}
         className="relative shrink-0 bg-white border-r border-slate-200 z-40 flex flex-col h-full overflow-hidden shadow-xl lg:shadow-none"
       >
         <div className="w-80 flex flex-col h-full">
-          {/* Brand Header */}
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          {/* Institutional Clinic Header */}
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center text-white shadow-xs">
                 <Stethoscope className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-extrabold text-slate-900 tracking-tight block text-base leading-tight">RapidAid</span>
-                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Medical Assistant</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-900 tracking-tight block text-sm leading-tight">RapidAid</span>
+                  <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-mono text-[9px] font-bold">CLINICAL</span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-medium">Electronic Health Records</span>
               </div>
             </div>
             <button
               onClick={() => setShowHistory(false)}
-              className="p-1.5 hover:bg-slate-200/60 rounded-xl transition-colors text-slate-400 hover:text-slate-700"
+              className="p-1.5 hover:bg-slate-200/60 rounded-lg transition-colors text-slate-400 hover:text-slate-700"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
 
-          {/* New Consultation CTA */}
-          <div className="p-4">
+          {/* New Encounter CTA */}
+          <div className="p-3.5">
             <button
               onClick={startNewSession}
-              className="w-full py-3 px-4 rounded-2xl bg-blue-50 border border-blue-200/80 hover:bg-blue-100/70 hover:border-blue-300 transition-all flex items-center gap-3 text-xs font-bold text-blue-700 group shadow-sm"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-teal-50 border border-teal-200 hover:bg-teal-100/80 hover:border-teal-300 transition-all flex items-center gap-2.5 text-xs font-semibold text-teal-900 group shadow-xs"
             >
-              <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm">
-                <Plus className="w-4 h-4" />
+              <div className="w-6 h-6 rounded-lg bg-teal-700 flex items-center justify-center text-white shadow-xs">
+                <Plus className="w-3.5 h-3.5" />
               </div>
-              <span>New Consultation</span>
+              <span>New Patient Encounter</span>
             </button>
           </div>
 
-          {/* Past Consultations List */}
-          <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1.5 custom-scrollbar">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">History Records</p>
+          {/* Past Consultations / Encounters List */}
+          <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1 custom-scrollbar">
+            <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span>Patient Encounters</span>
+              <span className="font-mono text-slate-400 font-normal">{sessions.length} recorded</span>
+            </div>
             {user ? (
               sessions.length === 0 ? (
-                <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                  <p className="text-xs font-semibold text-slate-400">No consultation records yet</p>
+                <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  <FileText className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-slate-500">No patient encounters recorded yet</p>
                 </div>
               ) : (
                 sessions.map(session => (
@@ -621,14 +630,14 @@ export default function App() {
                       currentSessionIdRef.current = session.id;
                       if (window.innerWidth < 1024) setShowHistory(false);
                     }}
-                    className={`w-full p-3.5 rounded-2xl text-left transition-all group flex flex-col gap-1 border ${
+                    className={`w-full p-3 rounded-xl text-left transition-all group flex flex-col gap-1 border ${
                       currentSessionId === session.id
-                        ? 'bg-blue-50/70 border-blue-200 shadow-sm'
-                        : 'bg-transparent border-transparent hover:bg-slate-100/70 text-slate-700'
+                        ? 'bg-teal-50/80 border-teal-300 shadow-xs'
+                        : 'bg-transparent border-transparent hover:bg-slate-100/80 text-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <span className={`text-xs font-bold truncate flex-1 ${currentSessionId === session.id ? 'text-blue-700' : 'text-slate-800'}`}>
+                      <span className={`text-xs font-bold truncate flex-1 ${currentSessionId === session.id ? 'text-teal-950' : 'text-slate-800'}`}>
                         {session.title}
                       </span>
                       <Trash2
@@ -636,52 +645,55 @@ export default function App() {
                         className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity ml-2 text-slate-400 shrink-0"
                       />
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                      <Clock className="w-3 h-3" />
-                      <span>{new Date(session.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(session.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                      <span className="font-mono text-[9px] text-slate-400">ENC#{session.id.slice(0, 5).toUpperCase()}</span>
                     </div>
                   </button>
                 ))
               )
             ) : (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
-                <span className="font-bold block mb-1">Guest Mode</span>
-                <span className="text-[11px] text-amber-700 leading-relaxed block mb-2">
-                  Sign in to save and sync your medical consultations across devices.
+              <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs space-y-2">
+                <span className="font-bold block">Patient Session Unregistered</span>
+                <span className="text-[11px] text-amber-700 leading-relaxed block">
+                  Sign in with clinician or patient credentials to persist health records securely.
                 </span>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="w-full py-2 bg-amber-600 text-white rounded-xl font-bold text-xs hover:bg-amber-700 transition-colors"
+                  className="w-full py-1.5 bg-amber-700 text-white rounded-lg font-semibold text-xs hover:bg-amber-800 transition-colors"
                 >
-                  Sign In / Register
+                  Clinical Sign In
                 </button>
               </div>
             )}
           </div>
 
-          {/* User Account / Sign In Bar */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+          {/* User Account / Identity Bar */}
+          <div className="p-3 border-t border-slate-200 bg-slate-50/60">
             {user ? (
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
+                <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
                   {user.email ? user.email[0].toUpperCase() : 'P'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-900 truncate">{user.displayName || user.email}</p>
                   <button
                     onClick={() => signOut(firebaseAuth)}
-                    className="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-wider transition-colors"
+                    className="text-[10px] font-semibold text-slate-400 hover:text-red-600 uppercase tracking-wider transition-colors"
                   >
-                    Log out
+                    Disconnect Session
                   </button>
                 </div>
               </div>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold tracking-wide hover:bg-slate-800 transition-colors"
+                className="w-full py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors"
               >
-                Sign In to Save Records
+                Access Patient Portal
               </button>
             )}
           </div>
@@ -690,13 +702,13 @@ export default function App() {
 
       {/* Main Medical Workspace (Center: Chat & Consultation) */}
       <div className="flex-1 flex flex-col min-w-0 relative h-full bg-[#F8FAFC]">
-        {/* Top Header Bar */}
-        <header className="h-18 px-5 lg:px-8 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-3.5">
+        {/* Clinical Workspace Header Bar */}
+        <header className="h-16 px-4 sm:px-6 lg:px-8 border-b border-slate-200 bg-white/95 backdrop-blur-xs flex items-center justify-between sticky top-0 z-20">
+          <div className="flex items-center gap-3">
             {!showHistory && (
               <button
                 onClick={() => setShowHistory(true)}
-                className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
                 title="Consultation History"
               >
                 <History className="w-4 h-4" />
@@ -704,28 +716,31 @@ export default function App() {
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                <h1 className="text-sm font-black text-slate-900 tracking-tight">
-                  {user ? (activeSession?.title || 'Clinical Consultation') : 'RapidAid Healthcare Consultation'}
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+                <h1 className="text-sm font-bold text-slate-900 tracking-tight truncate max-w-xs sm:max-w-md">
+                  {user ? (activeSession?.title || 'Clinical Encounter') : 'RapidAid Clinical Consultation'}
                 </h1>
+                <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[9px] font-semibold border border-slate-200">
+                  ENC-ACTIVE
+                </span>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Clinical Intelligence System • Gemini 3.8
+              <p className="text-[10px] text-slate-500 font-medium">
+                Clinical Diagnostic Protocol • Evidence-Based Triage Matrix
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Quick action buttons */}
+          <div className="flex items-center gap-2">
+            {/* Quick Action Buttons */}
             <button
               onClick={() => setShowMedications(true)}
-              className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 transition-colors flex items-center gap-1.5"
-              title="Medication Schedule"
+              className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors flex items-center gap-1.5 shadow-xs"
+              title="eMAR Active Pharmacotherapy"
             >
-              <Pill className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Medications</span>
+              <Pill className="w-3.5 h-3.5 text-teal-700" />
+              <span className="hidden sm:inline">eMAR</span>
               {medications.length > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full text-[10px]">
+                <span className="px-1.5 py-0.2 bg-teal-100 text-teal-800 rounded-full text-[10px] font-mono font-bold">
                   {medications.length}
                 </span>
               )}
@@ -733,8 +748,8 @@ export default function App() {
 
             <button
               onClick={() => setShowResources(true)}
-              className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors"
-              title="Medical Knowledge Library"
+              className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+              title="Medical Reference Library"
             >
               <BookOpen className="w-4 h-4" />
             </button>
@@ -742,8 +757,8 @@ export default function App() {
             {user && (
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors"
-                title="Patient Health Profile"
+                className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                title="Patient Chart & Health Profile"
               >
                 <UserIcon className="w-4 h-4" />
               </button>
@@ -753,106 +768,106 @@ export default function App() {
               <>
                 <button
                   onClick={downloadTranscript}
-                  className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors"
-                  title="Export Consultation Transcript"
+                  className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                  title="Export Clinical Encounter Record"
                 >
                   <Download className="w-4 h-4" />
                 </button>
                 <button
                   onClick={clearCurrentChat}
-                  className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-red-500 transition-colors"
-                  title="Clear Chat"
+                  className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-red-600 transition-colors shadow-xs"
+                  title="Clear Encounter Messages"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </>
             )}
 
-            {/* Prominent Voice Option on the side toggle button */}
+            {/* Telehealth Audio Station Toggle */}
             <button
               onClick={() => setShowVoiceCompanion(prev => !prev)}
-              className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 shadow-sm ${
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs ${
                 showVoiceCompanion
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-blue-500/20'
+                  ? 'bg-teal-700 border-teal-700 text-white'
                   : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'
               }`}
-              title={showVoiceCompanion ? "Hide Voice Companion" : "Show Voice Companion on the side"}
+              title={showVoiceCompanion ? "Hide Telehealth Audio Panel" : "Open Telehealth Audio Exam Station"}
             >
-              <Mic className="w-3.5 h-3.5" />
-              <span>Voice Assistant</span>
-              <span className={`w-1.5 h-1.5 rounded-full ${showVoiceCompanion ? 'bg-white animate-pulse' : 'bg-slate-400'}`} />
+              <Radio className={`w-3.5 h-3.5 ${showVoiceCompanion ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">Audio Exam</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${showVoiceCompanion ? 'bg-emerald-300' : 'bg-slate-400'}`} />
             </button>
           </div>
         </header>
 
         {/* Main Chat Stream Area */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-6 space-y-6">
-          <div className="max-w-3xl mx-auto space-y-6 pb-28">
-            {/* Clinical Notice Banner */}
-            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
-                <Info className="w-4 h-4 text-amber-600" />
+        <main className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-5 space-y-5">
+          <div className="max-w-3xl mx-auto space-y-5 pb-28">
+            {/* Clinical Safety Protocol Notice */}
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
+                <Info className="w-4 h-4 text-amber-700" />
               </div>
               <div className="text-xs">
-                <span className="font-bold text-slate-900 block">Informational Clinical Assistant</span>
-                <span className="text-slate-500 leading-relaxed font-medium">
-                  RapidAid provides evidence-based guidance and symptom triage. It does not replace emergency medical services or physician evaluations. In severe emergencies, call 911 immediately.
+                <span className="font-bold text-slate-900 block">Clinical Triage Protocol & Decision Support</span>
+                <span className="text-slate-600 leading-relaxed font-medium text-[11px]">
+                  RapidAid applies institutional clinical assessment algorithms. For life-threatening emergencies (acute anaphylaxis, severe cardiac chest pain, stroke symptoms), invoke immediate emergency dispatch (911).
                 </span>
               </div>
             </div>
 
-            {/* Active Medication Alert if Due */}
+            {/* Active Medication Scheduled Dose Alert */}
             {activeReminders.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-2xl bg-blue-600 text-white shadow-lg flex items-center justify-between"
+                className="p-3.5 rounded-xl bg-teal-800 text-white shadow-sm flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                    <Pill className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                    <Pill className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider font-extrabold text-blue-200">Scheduled Dose Due</p>
-                    <p className="text-sm font-bold">Time to take: {activeReminders.join(', ')}</p>
+                    <p className="text-[10px] uppercase tracking-wider font-mono font-bold text-teal-200">Scheduled Medication Administration Due</p>
+                    <p className="text-xs font-semibold">Active Prescription: {activeReminders.join(', ')}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setActiveReminders([])}
-                  className="px-3.5 py-1.5 rounded-xl bg-white text-blue-600 font-bold text-xs hover:bg-blue-50 transition-colors"
+                  className="px-3 py-1 rounded-lg bg-white text-teal-900 font-semibold text-xs hover:bg-teal-50 transition-colors shadow-xs"
                 >
-                  Acknowledge
+                  Confirm Dose
                 </button>
               </motion.div>
             )}
 
-            {/* Empty State / Suggested Medical Prompts */}
+            {/* Empty State / Suggested Medical Intake Scenarios */}
             {currentMessages.length === 0 && (
-              <div className="py-10 text-center space-y-8">
+              <div className="py-8 text-center space-y-6">
                 <div className="relative inline-block">
-                  <div className="w-20 h-20 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto shadow-sm">
-                    <Activity className="w-9 h-9 text-blue-600" />
+                  <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-xs">
+                    <Activity className="w-8 h-8 text-teal-700" />
                   </div>
                 </div>
-                <div className="space-y-2 max-w-lg mx-auto">
-                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">How can RapidAid support your health today?</h2>
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                    Type your symptoms or health questions below for immediate clinical triage, medication guidance, and personalized care roadmaps.
+                <div className="space-y-1.5 max-w-md mx-auto">
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">RapidAid Clinical Triage System</h2>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Submit patient symptoms, vital signs, or pharmacology questions to initiate an evidence-based clinical evaluation.
                   </p>
                 </div>
 
-                {/* Suggested Prompt Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto pt-2">
+                {/* Suggested Intake Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto pt-1">
                   {SUGGESTED_PROMPTS.map((item, index) => (
                     <button
                       key={index}
                       onClick={() => handleSendText(undefined, item.prompt)}
-                      className="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between text-left"
+                      className="p-4 rounded-xl bg-white border border-slate-200 hover:border-teal-500 hover:shadow-xs transition-all group flex flex-col justify-between text-left"
                     >
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-lg">{item.icon}</span>
-                          <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                          <span className="text-base">{item.icon}</span>
+                          <span className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
                             {item.title}
                           </span>
                         </div>
@@ -860,8 +875,8 @@ export default function App() {
                           "{item.prompt}"
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-3 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        Ask RapidAid &rarr;
+                      <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider mt-3 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        Initiate Assessment &rarr;
                       </span>
                     </button>
                   ))}
@@ -873,92 +888,101 @@ export default function App() {
             {currentMessages.map((msg, idx) => (
               <motion.div
                 key={msg.id || msg.timestamp + idx}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`relative ${msg.analysis ? 'w-full' : 'max-w-[85%]'}`}>
                   {msg.isUser ? (
-                    // User Message Bubble
-                    <div className="p-4 rounded-3xl bg-slate-900 text-white shadow-md shadow-slate-900/10">
-                      <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
-                      <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-slate-400">
+                    // Patient Message Bubble
+                    <div className="p-4 rounded-2xl bg-slate-900 text-white shadow-xs">
+                      <div className="flex items-center gap-2 mb-1 text-[10px] text-teal-400 font-mono font-bold uppercase tracking-wider">
+                        <span>Patient Intake</span>
                         {msg.fromVoice && (
-                          <span className="px-1.5 py-0.5 rounded bg-white/10 text-slate-300 font-bold uppercase tracking-wider">
-                            Voice
+                          <span className="px-1.5 py-0.2 rounded bg-teal-900/60 text-teal-300 font-semibold">
+                            Telehealth Audio
                           </span>
                         )}
+                      </div>
+                      <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap text-slate-100">{msg.text}</p>
+                      <div className="mt-2 flex items-center justify-end text-[10px] font-mono text-slate-400">
                         <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </div>
                   ) : (
                     // Assistant Clinical Response Card
                     <div className="space-y-3 w-full">
-                      {/* Structured Symptom Analysis Card if generated */}
+                      {/* Structured Clinical Triage Assessment Card if generated */}
                       {msg.analysis && (
-                        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 mb-3">
-                          {/* Card Header with Urgency Pill */}
-                          <div className={`px-6 py-4 flex items-center justify-between border-b ${
-                            msg.analysis.urgency === 'Emergency' ? 'bg-red-50/80 border-red-200 text-red-700' :
-                            msg.analysis.urgency === 'High' ? 'bg-amber-50/80 border-amber-200 text-amber-700' :
-                            'bg-blue-50/80 border-blue-200 text-blue-700'
+                        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs mb-3">
+                          {/* Card Header with Clinical Urgency Pill */}
+                          <div className={`px-5 py-3.5 flex items-center justify-between border-b ${
+                            msg.analysis.urgency === 'Emergency' ? 'bg-red-50/90 border-red-200 text-red-800' :
+                            msg.analysis.urgency === 'High' ? 'bg-amber-50/90 border-amber-200 text-amber-800' :
+                            'bg-teal-50/90 border-teal-200 text-teal-900'
                           }`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                                msg.analysis.urgency === 'Emergency' ? 'bg-red-100 text-red-600' :
-                                msg.analysis.urgency === 'High' ? 'bg-amber-100 text-amber-600' :
-                                'bg-blue-100 text-blue-600'
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                msg.analysis.urgency === 'Emergency' ? 'bg-red-100 text-red-700' :
+                                msg.analysis.urgency === 'High' ? 'bg-amber-100 text-amber-700' :
+                                'bg-teal-100 text-teal-800'
                               }`}>
-                                <ShieldAlert className="w-5 h-5" />
+                                <ShieldAlert className="w-4 h-4" />
                               </div>
                               <div>
-                                <h4 className="text-xs font-bold uppercase tracking-wider">Clinical Symptom Assessment</h4>
-                                <p className="text-[11px] font-medium opacity-80">
-                                  Symptoms: {msg.analysis.symptoms.join(', ')}
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-xs font-bold uppercase tracking-wider">Clinical Triage Assessment</h4>
+                                  <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 border border-current/20">ICD-TRIAGE</span>
+                                </div>
+                                <p className="text-[11px] font-medium opacity-85">
+                                  Reported: {msg.analysis.symptoms.join(', ')}
                                 </p>
                               </div>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                              msg.analysis.urgency === 'Emergency' ? 'bg-red-600 text-white' :
-                              msg.analysis.urgency === 'High' ? 'bg-amber-600 text-white' :
-                              'bg-blue-600 text-white'
+                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
+                              msg.analysis.urgency === 'Emergency' ? 'bg-red-700 text-white' :
+                              msg.analysis.urgency === 'High' ? 'bg-amber-700 text-white' :
+                              'bg-teal-800 text-white'
                             }`}>
                               {msg.analysis.urgency} Urgency
                             </span>
                           </div>
 
-                          {/* Card Content */}
-                          <div className="p-6 space-y-6">
-                            {/* Potential Conditions */}
+                          {/* Assessment Content */}
+                          <div className="p-5 space-y-5">
+                            {/* Differential Diagnoses / Potential Causes */}
                             <div>
-                              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                                Potential Clinical Causes
-                              </p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="flex items-center justify-between mb-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                  Differential Diagnoses / Etiology
+                                </p>
+                                <span className="text-[9px] font-mono text-slate-400">CLINICAL LIKELIHOOD</span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 {msg.analysis.potentialConditions.map((cond, cIdx) => (
-                                  <div key={cIdx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                                  <div key={cIdx} className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
                                     <div className="flex items-center justify-between mb-1">
                                       <span className="text-xs font-bold text-slate-900">{cond.name}</span>
-                                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                      <span className="text-[9px] font-mono font-bold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded">
                                         {cond.likelihood}
                                       </span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{cond.description}</p>
+                                    <p className="text-[11px] text-slate-600 font-medium leading-relaxed">{cond.description}</p>
                                   </div>
                                 ))}
                               </div>
                             </div>
 
-                            {/* Recommendations */}
+                            {/* Recommended Clinical Roadmap */}
                             <div>
-                              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                                Recommended Action Roadmap
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                                Recommended Clinical Action Protocol
                               </p>
-                              <div className="space-y-2">
+                              <div className="space-y-1.5">
                                 {msg.analysis.recommendations.map((rec, rIdx) => (
-                                  <div key={rIdx} className="flex items-start gap-2.5 text-xs text-slate-700 font-medium">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                    <span>{rec}</span>
+                                  <div key={rIdx} className="flex items-start gap-2.5 text-xs text-slate-700 font-medium p-2 rounded-lg bg-slate-50/50 border border-slate-100">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-700 shrink-0 mt-0.5" />
+                                    <span className="leading-relaxed">{rec}</span>
                                   </div>
                                 ))}
                               </div>
@@ -967,57 +991,57 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Main Message Text (Markdown Formatted) */}
+                      {/* Main Clinical Note (Markdown Formatted) */}
                       {msg.text && (
-                        <div className="p-5 rounded-3xl bg-white border border-slate-200 text-slate-800 shadow-sm relative">
-                          <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 prose-ul:my-2 prose-li:my-0.5">
+                        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 text-slate-800 shadow-xs relative">
+                          <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 prose-ul:my-2 prose-li:my-0.5 text-xs sm:text-sm">
                             <Markdown>{msg.text}</Markdown>
                           </div>
 
-                          {/* Message Footer / Controls */}
-                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                          {/* Message Footer / Clinical Telemetry */}
+                          <div className="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
                             <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-blue-600/10 flex items-center justify-center text-[9px] font-bold text-blue-600">
-                                R
+                              <div className="w-4 h-4 rounded bg-teal-700 text-white flex items-center justify-center text-[9px] font-bold">
+                                +
                               </div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider">RapidAid AI</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">RapidAid Clinical AI</span>
                               {msg.fromVoice && (
-                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-bold">
-                                  Spoken in Call
+                                <span className="px-1.5 py-0.2 rounded bg-teal-50 border border-teal-200 text-teal-800 text-[9px] font-mono font-bold">
+                                  VOICE ENCOUNTER
                                 </span>
                               )}
                               <span>•</span>
-                              <span className="text-[10px]">
+                              <span className="text-[10px] font-mono">
                                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-1">
-                              {/* Speak Aloud Button */}
+                              {/* Audio Read Aloud */}
                               <button
                                 onClick={() => speakText(msg.text!, msg.id || `${idx}`)}
                                 className={`p-1.5 rounded-lg transition-colors ${
                                   speakingMessageId === (msg.id || `${idx}`)
-                                    ? 'bg-blue-50 text-blue-600 font-bold'
+                                    ? 'bg-teal-50 text-teal-700 font-bold'
                                     : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
                                 }`}
-                                title={speakingMessageId === (msg.id || `${idx}`) ? "Stop Speaking" : "Read Aloud"}
+                                title={speakingMessageId === (msg.id || `${idx}`) ? "Stop Audio Readout" : "Audio Readout"}
                               >
                                 {speakingMessageId === (msg.id || `${idx}`) ? (
-                                  <VolumeX className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                                  <VolumeX className="w-3.5 h-3.5 text-teal-700 animate-pulse" />
                                 ) : (
                                   <Volume2 className="w-3.5 h-3.5" />
                                 )}
                               </button>
 
-                              {/* Copy Button */}
+                              {/* Copy Clinical Advice */}
                               <button
                                 onClick={() => copyMessage(msg.text!, msg.id || `${idx}`)}
                                 className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                                title="Copy Advice"
+                                title="Copy Clinical Text"
                               >
                                 {copiedId === (msg.id || `${idx}`) ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  <Check className="w-3.5 h-3.5 text-teal-700" />
                                 ) : (
                                   <Copy className="w-3.5 h-3.5" />
                                 )}
@@ -1035,16 +1059,16 @@ export default function App() {
             {/* Live Generation Typing Pulse */}
             {isGenerating && (
               <motion.div
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200 max-w-xs shadow-sm"
+                className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-slate-200 max-w-xs shadow-xs"
               >
                 <div className="flex gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-xs font-bold text-slate-500">RapidAid is analyzing...</span>
+                <span className="text-xs font-semibold text-slate-600 font-mono text-[11px]">Synthesizing clinical evaluation...</span>
                 <button
                   onClick={handleStopGenerating}
                   className="ml-auto p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600"
@@ -1057,12 +1081,12 @@ export default function App() {
 
             {/* Error Banner */}
             {errorMessage && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                   <span className="font-semibold">{errorMessage}</span>
                 </div>
-                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600">
+                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-700">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1072,12 +1096,12 @@ export default function App() {
           </div>
         </main>
 
-        {/* Sticky Chat Input Box */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent pt-6 pb-5 px-4 sm:px-8 z-20">
+        {/* Sticky Clinical Order & Intake Input Box */}
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent pt-4 pb-4 px-4 sm:px-8 z-20">
           <div className="max-w-3xl mx-auto">
             <form
               onSubmit={(e) => handleSendText(e)}
-              className="relative bg-white border border-slate-200/90 rounded-2xl shadow-lg shadow-slate-200/40 p-2 pl-4 flex items-center gap-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
+              className="relative bg-white border border-slate-300 rounded-xl shadow-xs p-2 pl-3.5 flex items-center gap-2 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 transition-all"
             >
               <textarea
                 ref={inputRef}
@@ -1090,15 +1114,15 @@ export default function App() {
                   }
                 }}
                 rows={1}
-                placeholder="Describe symptoms, medications, or questions for clinical triage..."
-                className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 placeholder:text-slate-400 resize-none max-h-32 py-1.5"
+                placeholder="Enter patient symptoms, vital signs, or pharmacology inquiries for clinical triage..."
+                className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 resize-none max-h-32 py-1"
               />
 
               {isGenerating ? (
                 <button
                   type="button"
                   onClick={handleStopGenerating}
-                  className="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold text-xs transition-colors flex items-center gap-1.5"
                 >
                   <Square className="w-3.5 h-3.5" />
                   <span>Stop</span>
@@ -1107,15 +1131,17 @@ export default function App() {
                 <button
                   type="submit"
                   disabled={!textInput.trim()}
-                  className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors disabled:opacity-40 disabled:pointer-events-none shadow-md shadow-blue-500/20 flex items-center justify-center shrink-0"
+                  className="px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs transition-colors disabled:opacity-40 disabled:pointer-events-none shadow-xs flex items-center justify-center shrink-0 gap-1.5"
                 >
-                  <Send className="w-4 h-4" />
+                  <span>Evaluate</span>
+                  <Send className="w-3.5 h-3.5" />
                 </button>
               )}
             </form>
-            <p className="text-[11px] text-slate-400 text-center mt-2 font-medium">
-              Medical Artificial Intelligence • Independent text consultation with optional voice companion on the side
-            </p>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 px-1 font-mono">
+              <span>RapidAid Clinical Intelligence System</span>
+              <span>CONFIDENTIAL • HEALTH DATA PROTOCOL</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1155,47 +1181,50 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowResources(false)}
-              className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl z-10"
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl z-10"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+              <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                    <BookOpen className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center text-teal-800">
+                    <BookOpen className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Verified Health Resources</h3>
-                    <p className="text-xs text-slate-400 font-medium">Authoritative medical references and directories</p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-slate-900">Clinical Knowledge & Reference Library</h3>
+                      <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-teal-100 text-teal-800 font-bold">VERIFIED</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium">Authoritative biomedical guidelines and evidence repositories</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowResources(false)}
-                  className="p-1.5 hover:bg-slate-200/50 rounded-xl transition-colors text-slate-400"
+                  className="p-1.5 hover:bg-slate-200/60 rounded-lg transition-colors text-slate-400 hover:text-slate-700"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-3">
+              <div className="p-4 sm:p-5 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-2.5">
                 {MEDICAL_RESOURCES.map((res, i) => (
                   <a
                     key={i}
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/50 border border-slate-200/70 hover:border-blue-300 transition-all flex items-start justify-between group block"
+                    className="p-3.5 rounded-xl bg-slate-50/80 hover:bg-teal-50/60 border border-slate-200 hover:border-teal-300 transition-all flex items-start justify-between group block shadow-xs"
                   >
                     <div>
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">{res.category}</span>
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors mt-0.5">{res.name}</h4>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed font-medium">{res.description}</p>
+                      <span className="text-[9px] font-mono font-bold text-teal-800 bg-white border border-slate-200 px-1.5 py-0.5 rounded uppercase tracking-wider">{res.category}</span>
+                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-teal-900 transition-colors mt-1.5">{res.name}</h4>
+                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed font-medium">{res.description}</p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-blue-500 shrink-0 ml-3 mt-1" />
+                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-teal-700 shrink-0 ml-3 mt-1" />
                   </a>
                 ))}
               </div>

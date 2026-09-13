@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Activity, ShieldAlert, Droplets, Pill, Calendar, HeartPulse } from 'lucide-react';
+import { X, User, Activity, ShieldAlert, Droplets, Pill, Calendar, HeartPulse, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface ProfileModalProps {
@@ -54,161 +54,172 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[200]"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl z-[201] p-1"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="w-full max-w-xl bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden max-h-[92vh]"
           >
-            <div className="bg-white rounded-[3rem] border border-slate-200/60 shadow-2xl p-10 relative flex flex-col max-h-[90vh] overflow-hidden">
+            {/* Clinical Modal Header */}
+            <div className="p-5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shadow-xs">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Patient Health Record (EHR)</h2>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-mono font-semibold">
+                      MRN-CONFIDENTIAL
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Clinical demographics, allergy profile, and baseline medical history
+                  </p>
+                </div>
+              </div>
               <button 
                 onClick={onClose}
-                className="absolute top-8 right-8 p-3 rounded-2xl bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
+            </div>
 
-              <div className="flex items-center gap-5 mb-10">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-slate-900 text-blue-400 flex items-center justify-center border border-slate-800 shadow-xl">
-                  <User className="w-8 h-8" />
-                </div>
+            {/* Form Fields */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">Patient Identity Protocol</h2>
-                  <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1">Refine AI Diagnostic Accuracy</p>
+                  <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1 mb-1">
+                    <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                    Age (Years)
+                  </label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="e.g. 42"
+                    min="1"
+                    max="125"
+                    className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1 mb-1">
+                    <Activity className="w-3.5 h-3.5 text-teal-600" />
+                    Biological Sex
+                  </label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 transition-all"
+                  >
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other / Intersex</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1 mb-1">
+                    <Droplets className="w-3.5 h-3.5 text-rose-600" />
+                    Blood Group
+                  </label>
+                  <input
+                    type="text"
+                    value={bloodType}
+                    onChange={(e) => setBloodType(e.target.value)}
+                    placeholder="e.g. O+, A-"
+                    className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-semibold text-slate-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 transition-all"
+                  />
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto pr-4 custom-scrollbar pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Age Profile</label>
-                    <div className="relative group">
-                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                      <input
-                        type="number"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                        placeholder="Years"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Gender ID</label>
-                    <div className="relative group">
-                      <Activity className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none shadow-none cursor-pointer"
+              <div>
+                <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5 mb-1">
+                  <HeartPulse className="w-3.5 h-3.5 text-teal-600" />
+                  Pre-existing Chronic Conditions
+                </label>
+                <textarea
+                  value={conditions}
+                  onChange={(e) => setConditions(e.target.value)}
+                  placeholder="e.g., Hypertension, Type 2 Diabetes, Asthma, Previous Myocardial Infarction..."
+                  rows={2}
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs font-medium text-slate-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 transition-all resize-none leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5 mb-1 text-rose-700">
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                  Verified Drug & Environmental Allergies (Critical)
+                </label>
+                <textarea
+                  value={allergies}
+                  onChange={(e) => setAllergies(e.target.value)}
+                  placeholder="e.g., Penicillin (Anaphylaxis), Sulfa drugs, Peanuts, Latex..."
+                  rows={2}
+                  className="w-full bg-white border border-rose-200 rounded-lg p-3 text-xs font-medium text-slate-900 focus:outline-none focus:border-rose-600 focus:ring-1 focus:ring-rose-600 transition-all resize-none leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5 mb-1">
+                  <Pill className="w-3.5 h-3.5 text-teal-600" />
+                  Current Regimen / Prescriptions
+                </label>
+                <textarea
+                  value={medications}
+                  onChange={(e) => setMedications(e.target.value)}
+                  placeholder="e.g., Lisinopril 10mg q.d., Atorvastatin 20mg q.h.s..."
+                  rows={2}
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs font-medium text-slate-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 transition-all resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* Security & Action Bar */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <ShieldCheck className="w-4 h-4 text-teal-600" />
+                  <span className="text-[11px] font-medium">HIPAA/AES-256 Protected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AnimatePresence>
+                    {success && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: 6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1 text-emerald-600 text-xs font-semibold mr-2"
                       >
-                        <option value="">Select ID</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Blood Delta</label>
-                    <div className="relative group">
-                      <Droplets className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                      <input
-                        type="text"
-                        value={bloodType}
-                        onChange={(e) => setBloodType(e.target.value)}
-                        placeholder="Type"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-none"
-                      />
-                    </div>
-                  </div>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Chart Updated</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs transition-colors shadow-xs disabled:opacity-50"
+                  >
+                    {loading ? 'Saving Chart...' : 'Save Patient Chart'}
+                  </button>
                 </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Clinical History</label>
-                  <div className="relative group">
-                    <HeartPulse className="absolute left-5 top-5 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                    <textarea
-                      value={conditions}
-                      onChange={(e) => setConditions(e.target.value)}
-                      placeholder="Chronic conditions, surgeries, or underlying diagnostics..."
-                      rows={2}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-[1.5rem] py-5 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Immune Sensitivity (Allergies)</label>
-                  <div className="relative group">
-                    <ShieldAlert className="absolute left-5 top-5 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                    <textarea
-                      value={allergies}
-                      onChange={(e) => setAllergies(e.target.value)}
-                      placeholder="Verified drug, environmental, or nutritional allergies..."
-                      rows={2}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-[1.5rem] py-5 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Pharmaceutical Regime</label>
-                  <div className="relative group">
-                    <Pill className="absolute left-5 top-5 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                    <textarea
-                      value={medications}
-                      onChange={(e) => setMedications(e.target.value)}
-                      placeholder="Active prescriptions and dosage schedules..."
-                      rows={2}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-[1.5rem] py-5 pl-14 pr-5 text-slate-900 text-sm font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all resize-none shadow-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-6 flex items-center justify-between border-t border-slate-100">
-                  <div className="flex flex-col gap-1 max-w-[50%]">
-                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">Security Encryption</span>
-                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                      Encrypted end-to-end. Stored in your private medical partition.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <AnimatePresence>
-                      {success && (
-                        <motion.div 
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center gap-2 text-green-600"
-                        >
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Profile Synced</span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] px-10 py-5 rounded-[1.75rem] shadow-xl shadow-slate-900/10 hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-50 relative overflow-hidden group/btn"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
-                      {loading ? 'Syncing...' : 'Update Protocol'}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
+              </div>
+            </form>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
