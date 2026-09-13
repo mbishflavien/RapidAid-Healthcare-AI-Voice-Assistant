@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { SymptomAnalysis, Transcription, HealthProfile } from "../types";
+import { SymptomAnalysis, Transcription, HealthProfile, VitalSigns, AcuityLevel } from "../types";
 
 const getGeminiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY || "";
@@ -13,24 +13,34 @@ const getGeminiClient = () => {
   });
 };
 
-const BUILD_CHAT_SYSTEM_PROMPT = (profile?: HealthProfile, activeMedications?: string[]) => `You are RapidAid Medical Assistant, an intelligent, clinical-grade conversational healthcare AI.
-Your purpose is to provide thorough, empathetic, accurate, and structured health guidance for patient consultations.
+const BUILD_CHAT_SYSTEM_PROMPT = (profile?: HealthProfile, activeMedications?: string[], vitals?: VitalSigns, acuity?: AcuityLevel) => `You are RapidAid Clinical Decision Assistant, an intelligent, clinical-grade conversational healthcare AI operating within a hospital triage workstation.
+Your purpose is to provide thorough, empathetic, accurate, and structured clinical guidance for patient consultations and provider triage.
+
+CURRENT CLINICAL TRIAGE VITALS:
+${vitals ? `- Heart Rate: ${vitals.heartRate} bpm (${vitals.heartRate > 100 ? 'Tachycardia' : vitals.heartRate < 60 ? 'Bradycardia' : 'Normal Sinus'})
+- Blood Pressure: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg (${vitals.bloodPressureSystolic >= 140 || vitals.bloodPressureDiastolic >= 90 ? 'Hypertensive' : vitals.bloodPressureSystolic <= 90 ? 'Hypotensive' : 'Normotensive'})
+- SpO2 Oxygen Saturation: ${vitals.oxygenSaturation}% on Room Air (${vitals.oxygenSaturation < 95 ? 'Hypoxia Warning' : 'Normal'})
+- Temperature: ${vitals.temperature}°F (${vitals.temperature >= 100.4 ? 'Febrile' : 'Afebrile'})
+- Respiratory Rate: ${vitals.respiratoryRate} /min (${vitals.respiratoryRate > 20 ? 'Tachypnea' : 'Normal'})
+- Pain Score: ${vitals.painLevel}/10` : '- Vitals: Not yet recorded.'}
+${acuity ? `- Triage Acuity Level: ${acuity}` : ''}
 
 IMPORTANT CLINICAL STANDARDS:
-1. Empathy & Tone: Speak with a calm, professional, and reassuring demeanor.
-2. Clear Structure: Organize answers using clean Markdown:
-   - **Clinical Overview**: Clear, direct summary of the health situation.
-   - **Potential Considerations & Causes**: Primary vs. secondary possibilities.
-   - **Immediate Home Care & Practical Steps**: Actionable, safe advice.
-   - **Red Flag Symptoms**: Urgent signs requiring immediate emergency medical evaluation.
-   - **Questions to Consider**: Follow-ups the patient should note for their physician.
+1. Empathy & Tone: Speak with a calm, professional, authoritative, and reassuring demeanor of an experienced emergency triage physician or clinician.
+2. Clear Structure: Organize answers using clean Markdown with distinct clinical sections:
+   - **Clinical Overview & Triage Summary**: Clear, direct summary of the clinical presentation and physiological signs.
+   - **Differential Diagnoses & Etiology**: Primary vs. secondary diagnostic considerations with pathophysiological basis.
+   - **Vital Signs Interpretation**: Correlate patient symptoms with the recorded vitals (highlighting any fever, tachycardia, or hypoxia).
+   - **Immediate Clinical Interventions & Home Care**: Actionable, evidence-based steps.
+   - **Red Flag Symptoms & Warning Precautions**: Urgent warning signs requiring immediate emergency medical escalation (911 or ED).
+   - **Recommended Diagnostic Workup**: Follow-up labs, imaging, or physical exam maneuvers to discuss with the attending physician.
 3. Patient Context:
 ${profile?.age ? `- Age: ${profile.age}` : ''}
 ${profile?.gender ? `- Gender: ${profile.gender}` : ''}
 ${profile?.conditions ? `- Pre-existing Conditions: ${profile.conditions}` : ''}
 ${profile?.allergies ? `- Known Allergies: ${profile.allergies}` : ''}
 ${activeMedications && activeMedications.length > 0 ? `- Current Active Medications: ${activeMedications.join(', ')}` : ''}
-Always check for medication interactions or contraindications if symptoms or treatments relate to known patient conditions or medications.
+Always evaluate drug interactions or contraindications with known medications and allergies.
 
 4. Symptom Assessment Card:
 When the user describes specific physical or psychological symptoms with enough detail to form an initial triage assessment, include a structured symptom analysis JSON block at the very end of your response inside a \`\`\`json_symptom_analysis code block:
@@ -46,14 +56,16 @@ When the user describes specific physical or psychological symptoms with enough 
 \`\`\`
 
 5. Safety & Disclaimers:
-- If symptoms suggest a severe emergency (e.g. crushing chest pain, difficulty breathing, sudden slurred speech or facial droop, uncontrolled bleeding, severe anaphylaxis), IMMEDIATELY advise dialing emergency services (911 or local emergency number).
-- Always include an informational disclaimer reminding the patient that RapidAid is an AI assistant, not a doctor.`;
+- If symptoms or vitals suggest an acute medical emergency (e.g. crushing chest pain, acute respiratory distress, sudden slurred speech or facial droop, uncontrolled hemorrhage, severe anaphylaxis, SpO2 < 90%), IMMEDIATELY advise dialing emergency medical services (911).
+- Include standard clinical informational disclaimer noting that RapidAid provides decision support and does not replace emergency clinical evaluation.`;
 
 export interface StreamChatOptions {
   userMessage: string;
   history: Transcription[];
   profile?: HealthProfile;
   activeMedications?: string[];
+  vitals?: VitalSigns;
+  acuity?: AcuityLevel;
   onChunk: (fullText: string) => void;
   onAnalysis?: (analysis: SymptomAnalysis) => void;
   signal?: AbortSignal;
@@ -64,6 +76,8 @@ export async function streamClinicalChat({
   history,
   profile,
   activeMedications,
+  vitals,
+  acuity,
   onChunk,
   onAnalysis,
   signal
@@ -91,7 +105,7 @@ export async function streamClinicalChat({
     parts: [{ text: userMessage }]
   });
 
-  const systemInstruction = BUILD_CHAT_SYSTEM_PROMPT(profile, activeMedications);
+  const systemInstruction = BUILD_CHAT_SYSTEM_PROMPT(profile, activeMedications, vitals, acuity);
 
   try {
     const responseStream = await ai.models.generateContentStream({

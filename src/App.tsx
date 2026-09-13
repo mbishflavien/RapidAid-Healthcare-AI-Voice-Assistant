@@ -60,7 +60,10 @@ import {
 import { signOut } from 'firebase/auth';
 import { Medication, subscribeToMedications } from './lib/medications';
 import { streamClinicalChat } from './lib/geminiChat';
-import { Transcription, SymptomAnalysis, Session } from './types';
+import { Transcription, SymptomAnalysis, Session, VitalSigns, AcuityLevel } from './types';
+import { ClinicalPatientBanner } from './components/ClinicalPatientBanner';
+import { SoapNoteModal } from './components/SoapNoteModal';
+import { ClinicalDecisionSupportModal } from './components/ClinicalDecisionSupportModal';
 
 const MEDICAL_RESOURCES = [
   {
@@ -144,6 +147,27 @@ export default function App() {
   const [showMedications, setShowMedications] = useState(false);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [activeReminders, setActiveReminders] = useState<string[]>([]);
+
+  // Clinical Telemetry & Triage State
+  const [vitals, setVitals] = useState<VitalSigns>({
+    heartRate: 74,
+    bloodPressureSystolic: 118,
+    bloodPressureDiastolic: 78,
+    oxygenSaturation: 99,
+    temperature: 98.6,
+    respiratoryRate: 16,
+    painLevel: 2,
+    lastRecorded: Date.now()
+  });
+  const [acuity, setAcuity] = useState<AcuityLevel>('ESI-3');
+  const [showSoapModal, setShowSoapModal] = useState(false);
+  const [showCdsModal, setShowCdsModal] = useState(false);
+
+  // Helper to inject structured clinical note or score directly into chat composer
+  const handleInjectTextToInput = (text: string) => {
+    setTextInput(prev => prev ? `${prev}\n\n${text}` : text);
+    inputRef.current?.focus();
+  };
 
   // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -395,6 +419,8 @@ export default function App() {
         history: messages,
         profile: userData?.healthProfile,
         activeMedications: medications.map(m => m.name),
+        vitals,
+        acuity,
         signal: controller.signal,
         onChunk: (chunkText) => {
           currentAccumulated = chunkText;
@@ -731,6 +757,26 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Clinical SOAP Chart Button */}
+            <button
+              onClick={() => setShowSoapModal(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 text-xs font-semibold text-teal-900 transition-colors flex items-center gap-1.5 shadow-xs"
+              title="Open Clinical Encounter Progress Note (SOAP)"
+            >
+              <FileText className="w-3.5 h-3.5 text-teal-800" />
+              <span className="hidden sm:inline">SOAP Note</span>
+            </button>
+
+            {/* Clinical Decision Support (CDS) Tools */}
+            <button
+              onClick={() => setShowCdsModal(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors flex items-center gap-1.5 shadow-xs"
+              title="Clinical Decision Support (qSOFA, Red Flags, GCS)"
+            >
+              <Stethoscope className="w-3.5 h-3.5 text-teal-700" />
+              <span className="hidden md:inline">CDS Tools</span>
+            </button>
+
             {/* Quick Action Buttons */}
             <button
               onClick={() => setShowMedications(true)}
@@ -748,7 +794,7 @@ export default function App() {
 
             <button
               onClick={() => setShowResources(true)}
-              className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+              className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs hidden sm:flex"
               title="Medical Reference Library"
             >
               <BookOpen className="w-4 h-4" />
@@ -800,6 +846,18 @@ export default function App() {
           </div>
         </header>
 
+        {/* Clinical Telemetry & Triage Banner */}
+        <ClinicalPatientBanner
+          vitals={vitals}
+          onUpdateVitals={setVitals}
+          acuity={acuity}
+          onUpdateAcuity={setAcuity}
+          patientProfile={userData?.healthProfile}
+          user={user}
+          onOpenProfile={() => setShowProfileModal(true)}
+          onInjectVitals={handleInjectTextToInput}
+        />
+
         {/* Main Chat Stream Area */}
         <main className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-5 space-y-5">
           <div className="max-w-3xl mx-auto space-y-5 pb-28">
@@ -843,17 +901,54 @@ export default function App() {
 
             {/* Empty State / Suggested Medical Intake Scenarios */}
             {currentMessages.length === 0 && (
-              <div className="py-8 text-center space-y-6">
+              <div className="py-6 text-center space-y-6">
                 <div className="relative inline-block">
-                  <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-xs">
-                    <Activity className="w-8 h-8 text-teal-700" />
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-xs">
+                    <Stethoscope className="w-7 h-7 text-teal-800" />
                   </div>
                 </div>
-                <div className="space-y-1.5 max-w-md mx-auto">
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">RapidAid Clinical Triage System</h2>
+                <div className="space-y-1.5 max-w-lg mx-auto">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-mono font-bold uppercase tracking-wider">
+                    <span>Dept. of Emergency & Ambulatory Triage</span>
+                    <span>•</span>
+                    <span>Station 04</span>
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Clinical Decision Support Station</h2>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    Submit patient symptoms, vital signs, or pharmacology questions to initiate an evidence-based clinical evaluation.
+                    Submit patient symptoms, vital signs, or pharmacology questions to initiate an evidence-based clinical evaluation, or select a rapid clinical tool below.
                   </p>
+                </div>
+
+                {/* Quick Bedside Actions */}
+                <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
+                  <button
+                    onClick={() => setShowCdsModal(true)}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <Activity className="w-3.5 h-3.5 text-teal-700" />
+                    <span>qSOFA Sepsis Screen</span>
+                  </button>
+                  <button
+                    onClick={() => setShowCdsModal(true)}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                    <span>Red Flag Checklist</span>
+                  </button>
+                  <button
+                    onClick={() => setShowSoapModal(true)}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-teal-700" />
+                    <span>Open Blank SOAP Note</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMedications(true)}
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <Pill className="w-3.5 h-3.5 text-teal-700" />
+                    <span>eMAR Medications</span>
+                  </button>
                 </div>
 
                 {/* Suggested Intake Cards */}
@@ -939,13 +1034,23 @@ export default function App() {
                                 </p>
                               </div>
                             </div>
-                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
-                              msg.analysis.urgency === 'Emergency' ? 'bg-red-700 text-white' :
-                              msg.analysis.urgency === 'High' ? 'bg-amber-700 text-white' :
-                              'bg-teal-800 text-white'
-                            }`}>
-                              {msg.analysis.urgency} Urgency
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setShowSoapModal(true)}
+                                className="px-2 py-1 rounded bg-white/90 hover:bg-white text-slate-800 text-[10px] font-mono font-bold flex items-center gap-1 border border-current/20 transition-colors shadow-xs"
+                                title="Open full Encounter SOAP Progress Note"
+                              >
+                                <FileText className="w-3 h-3 text-teal-800" />
+                                <span>SOAP Note</span>
+                              </button>
+                              <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
+                                msg.analysis.urgency === 'Emergency' ? 'bg-red-700 text-white' :
+                                msg.analysis.urgency === 'High' ? 'bg-amber-700 text-white' :
+                                'bg-teal-800 text-white'
+                              }`}>
+                                {msg.analysis.urgency} Urgency
+                              </span>
+                            </div>
                           </div>
 
                           {/* Assessment Content */}
@@ -1232,6 +1337,26 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Clinical Encounter Progress Note (SOAP) Modal */}
+      <SoapNoteModal
+        isOpen={showSoapModal}
+        onClose={() => setShowSoapModal(false)}
+        vitals={vitals}
+        acuity={acuity}
+        patientProfile={userData?.healthProfile}
+        medications={medications}
+        messages={messages}
+        user={user}
+      />
+
+      {/* Clinical Decision Support & Scoring Modal (qSOFA, Red Flags, GCS) */}
+      <ClinicalDecisionSupportModal
+        isOpen={showCdsModal}
+        onClose={() => setShowCdsModal(false)}
+        vitals={vitals}
+        onInjectNote={handleInjectTextToInput}
+      />
     </div>
   );
 }
