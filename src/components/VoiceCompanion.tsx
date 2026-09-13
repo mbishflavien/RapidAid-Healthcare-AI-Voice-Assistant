@@ -13,7 +13,10 @@ import {
   ShieldAlert, 
   CheckCircle2, 
   Sparkles,
-  Radio
+  Radio,
+  Lock,
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Transcription, HealthProfile } from '../types';
@@ -47,6 +50,7 @@ export const VoiceCompanion: React.FC<VoiceCompanionProps> = ({
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'active' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [micPermissionState, setMicPermissionState] = useState<'prompt' | 'granted' | 'denied' | 'unsupported' | null>(null);
   const [selectedVoice, setSelectedVoice] = useState('Puck');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState('Auto-Detect');
@@ -68,17 +72,52 @@ export const VoiceCompanion: React.FC<VoiceCompanionProps> = ({
     medicationsRef.current = medications;
   }, [medications]);
 
+  // Monitor microphone permission state when available
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.permissions && (navigator.permissions as any).query) {
+      try {
+        navigator.permissions.query({ name: 'microphone' as PermissionName })
+          .then((permissionStatus) => {
+            setMicPermissionState(permissionStatus.state as any);
+            permissionStatus.onchange = () => {
+              setMicPermissionState(permissionStatus.state as any);
+              if (permissionStatus.state === 'granted') {
+                setErrorMessage(null);
+              }
+            };
+          })
+          .catch(() => {
+            // Permission query not supported for microphone on some browsers
+          });
+      } catch {
+        // Safe ignore
+      }
+    }
+  }, []);
+
   const stopAudio = useCallback(() => {
     if (processorRef.current) {
-      processorRef.current.disconnect();
+      try {
+        processorRef.current.disconnect();
+      } catch {
+        // Ignore disconnect error
+      }
       processorRef.current = null;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      try {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      } catch {
+        // Ignore stop error
+      }
       streamRef.current = null;
     }
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close().catch(console.error);
+      try {
+        audioContextRef.current.close().catch(() => {});
+      } catch {
+        // Ignore close error
+      }
       audioContextRef.current = null;
     }
     audioQueueRef.current = [];
@@ -145,29 +184,63 @@ export const VoiceCompanion: React.FC<VoiceCompanionProps> = ({
         throw new Error("Missing Gemini API Key. Please verify settings.");
       }
 
-      // 1. Audio context
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioCtx({ sampleRate: SAMPLE_RATE });
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
+      // 1. Microphone stream acquisition with resilient fallback
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicPermissionState('unsupported');
+        throw new Error("Microphone API is not supported in this frame or browser. Please open the app directly in a new browser tab.");
       }
 
-      // 2. Microphone stream
       let micStream: MediaStream | null = null;
       try {
-        micStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            sampleRate: SAMPLE_RATE,
-            channelCount: 1,
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          }
-        });
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              sampleRate: SAMPLE_RATE,
+              channelCount: 1,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            }
+          });
+        } catch (constraintErr: any) {
+          // If browser/device rejects specific constraints (e.g. 16kHz sampleRate on certain OS/drivers), retry with basic audio
+          console.warn("Retrying microphone stream with basic audio constraints:", constraintErr?.name);
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
         streamRef.current = micStream;
-      } catch (micErr) {
-        console.error("Mic access denied:", micErr);
-        throw new Error("Microphone permission denied. Please allow microphone access.");
+        setMicPermissionState('granted');
+      } catch (micErr: any) {
+        console.warn("Microphone access not granted by user/system:", micErr?.name || micErr?.message);
+        const isDenied = 
+          micErr?.name === 'NotAllowedError' || 
+          micErr?.name === 'PermissionDeniedError' || 
+          micErr?.message?.toLowerCase().includes('denied') ||
+          micErr?.message?.toLowerCase().includes('permission');
+        const isNotFound = 
+          micErr?.name === 'NotFoundError' || 
+          micErr?.name === 'DevicesNotFoundError';
+
+        if (isDenied) {
+          setMicPermissionState('denied');
+          throw new Error("Microphone permission denied. Please allow microphone access in your browser or address bar settings.");
+        } else if (isNotFound) {
+          setMicPermissionState('unsupported');
+          throw new Error("No microphone audio input device was found. Please check your audio hardware.");
+        } else {
+          throw new Error(micErr?.message || "Could not access microphone.");
+        }
+      }
+
+      // 2. Audio context (initialized only after microphone stream is confirmed)
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      try {
+        audioContextRef.current = new AudioCtx({ sampleRate: SAMPLE_RATE });
+      } catch {
+        // Fallback if browser enforces native hardware output rate
+        audioContextRef.current = new AudioCtx();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -453,7 +526,7 @@ SAFETY RULES:
               stopAudio();
             },
             onerror: (err: any) => {
-              console.error("Live API Error:", err);
+              console.warn("Live API Notice:", err);
               setStatus('error');
               setErrorMessage("Voice link interrupted. Please try again.");
               stopAudio();
@@ -495,7 +568,7 @@ SAFETY RULES:
         processor.connect(audioContextRef.current.destination);
       }
     } catch (err: any) {
-      console.error("Failed to start voice companion:", err);
+      console.warn("Voice companion session could not start:", err?.message || err);
       setStatus('error');
       setErrorMessage(err?.message || "Could not start voice assistant.");
       stopAudio();
@@ -694,17 +767,67 @@ SAFETY RULES:
             </motion.div>
           )}
 
-          {/* Error Message */}
+          {/* Error Message & Permission Troubleshooting */}
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
-              <div className="flex-1">
-                <span className="font-bold block">Audio Protocol Alert</span>
-                <span className="font-medium text-[11px]">{errorMessage}</span>
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-slate-800 text-xs space-y-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 text-amber-800 font-bold">
+                  {errorMessage.toLowerCase().includes('microphone') ? (
+                    <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                  )}
+                  <span>
+                    {errorMessage.toLowerCase().includes('microphone') 
+                      ? "Microphone Permission Required" 
+                      : "Audio Link Status"}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setErrorMessage(null)} 
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-amber-100/50 transition-colors"
+                  title="Dismiss alert"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600">
-                <X className="w-3.5 h-3.5" />
-              </button>
+
+              <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                {errorMessage}
+              </p>
+
+              {errorMessage.toLowerCase().includes('microphone') && (
+                <div className="pt-2 border-t border-amber-200/70 space-y-2">
+                  <div className="bg-white/80 rounded-lg p-2.5 border border-amber-200/60 text-[11px] text-slate-600 space-y-1">
+                    <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <span>How to enable microphone:</span>
+                    </p>
+                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600">
+                      <li>Click the lock 🔒 or settings icon in your browser address bar.</li>
+                      <li>Toggle <strong>Microphone</strong> from "Block" to <strong>"Allow"</strong>.</li>
+                      <li>Click <strong>Retry Microphone</strong> below, or open in a new tab.</li>
+                    </ol>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      onClick={startVoiceSession}
+                      className="px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Retry Microphone</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(window.location.href, '_blank')}
+                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+                      title="Open application in a direct browser tab to prompt microphone directly"
+                    >
+                      <ExternalLink className="w-3 h-3 text-slate-500" />
+                      <span>Open in New Tab</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
