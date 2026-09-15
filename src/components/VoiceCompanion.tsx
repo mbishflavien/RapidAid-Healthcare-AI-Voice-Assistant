@@ -599,23 +599,23 @@ SAFETY RULES:
         aria-label="Close voice companion"
       />
 
-      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 max-w-full lg:static lg:w-80 xl:w-96 border-l border-slate-200 bg-white flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none animate-in slide-in-from-right duration-200">
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 max-w-full lg:static lg:w-80 xl:w-96 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none animate-in slide-in-from-right duration-200 transition-colors">
         {/* Telehealth Audio Station Header */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90">
+        <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-950/80">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-              isActive ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-200 text-slate-600'
+              isActive ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
             }`}>
               <Radio className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h3 className="text-xs font-bold text-slate-900 tracking-tight truncate">Telehealth Audio Station</h3>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate">Telehealth Audio Station</h3>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${
-                  isActive ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-300'
+                  isActive ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-300 dark:bg-slate-600'
                 }`} />
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono font-medium truncate">
+              <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate">
                 {status === 'active' ? 'FULL-DUPLEX 16kHz • LIVE' : status === 'connecting' ? 'CONNECTING...' : 'STANDBY • READY'}
               </p>
             </div>
@@ -624,14 +624,14 @@ SAFETY RULES:
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               onClick={() => setShowVoicePicker(!showVoicePicker)}
-              className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-xs"
+              className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 shadow-xs"
               title="Select Clinical Voice Persona"
             >
               <span>{selectedVoice}</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
               title="Close Audio Panel"
             >
               <X className="w-4 h-4 lg:hidden" />
@@ -647,11 +647,11 @@ SAFETY RULES:
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="border-b border-slate-200 bg-white p-3 space-y-1.5 overflow-hidden"
+            className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-1.5 overflow-hidden"
           >
             <div className="flex items-center justify-between px-1 mb-1">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Clinical Persona</p>
-              <span className="text-[10px] text-slate-400 font-mono">Gemini Live Audio</span>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clinical Persona</p>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Gemini Live Audio</span>
             </div>
             <div className="grid grid-cols-1 gap-1">
               {[
@@ -669,15 +669,15 @@ SAFETY RULES:
                   }}
                   className={`px-3 py-2 rounded-lg text-xs font-medium text-left flex items-center justify-between transition-colors ${
                     selectedVoice === item.name
-                      ? 'bg-teal-50 text-teal-900 border border-teal-200'
-                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-transparent'
+                      ? 'bg-teal-50 dark:bg-teal-950/80 text-teal-900 dark:text-teal-200 border border-teal-200 dark:border-teal-800'
+                      : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                   }`}
                 >
                   <div>
                     <span className="font-bold">{item.name}</span>
-                    <span className="text-[10px] text-slate-500 block">{item.role}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{item.role}</span>
                   </div>
-                  {selectedVoice === item.name && <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />}
+                  {selectedVoice === item.name && <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
                 </button>
               ))}
             </div>
@@ -778,13 +778,13 @@ SAFETY RULES:
 
           {/* Error Message & Permission Troubleshooting */}
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-slate-800 text-xs space-y-2.5">
+            <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-slate-800 dark:text-slate-200 text-xs space-y-2.5">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 text-amber-800 font-bold">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold">
                   {errorMessage.toLowerCase().includes('microphone') ? (
-                    <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+                    <Lock className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
                   )}
                   <span>
                     {errorMessage.toLowerCase().includes('microphone') 
@@ -794,24 +794,24 @@ SAFETY RULES:
                 </div>
                 <button 
                   onClick={() => setErrorMessage(null)} 
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-amber-100/50 transition-colors"
+                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md hover:bg-amber-100/50 dark:hover:bg-amber-900/50 transition-colors"
                   title="Dismiss alert"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                 {errorMessage}
               </p>
 
               {errorMessage.toLowerCase().includes('microphone') && (
-                <div className="pt-2 border-t border-amber-200/70 space-y-2">
-                  <div className="bg-white/80 rounded-lg p-2.5 border border-amber-200/60 text-[11px] text-slate-600 space-y-1">
-                    <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                <div className="pt-2 border-t border-amber-200/70 dark:border-amber-800 space-y-2">
+                  <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2.5 border border-amber-200/60 dark:border-amber-800 text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <span>How to enable microphone:</span>
                     </p>
-                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600">
+                    <ol className="list-decimal pl-4 space-y-0.5 text-slate-600 dark:text-slate-300">
                       <li>Click the lock 🔒 or settings icon in your browser address bar.</li>
                       <li>Toggle <strong>Microphone</strong> from "Block" to <strong>"Allow"</strong>.</li>
                       <li>Click <strong>Retry Microphone</strong> below, or open in a new tab.</li>
@@ -828,10 +828,10 @@ SAFETY RULES:
                     </button>
                     <button
                       onClick={() => window.open(window.location.href, '_blank')}
-                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
                       title="Open application in a direct browser tab to prompt microphone directly"
                     >
-                      <ExternalLink className="w-3 h-3 text-slate-500" />
+                      <ExternalLink className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                       <span>Open in New Tab</span>
                     </button>
                   </div>
@@ -841,12 +841,12 @@ SAFETY RULES:
           )}
 
           {/* Clinical Audio Protocol Guidelines */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs space-y-1.5">
-            <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11px]">
-              <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-xs space-y-1.5">
+            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-[11px]">
+              <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               Clinical Voice Capabilities:
             </span>
-            <ul className="text-[11px] text-slate-500 space-y-1 list-disc pl-4 font-medium">
+            <ul className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1 list-disc pl-4 font-medium">
               <li>Natural hands-free reporting of ongoing symptoms & vitals</li>
               <li>Medication dosage reminders and intake logging</li>
               <li>Dictated advice automatically registers into patient chart notes</li>
@@ -855,7 +855,7 @@ SAFETY RULES:
         </div>
 
         {/* Telehealth Audio Controls */}
-        <div className="pt-4 border-t border-slate-200 space-y-2.5">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
           <div className="flex items-center gap-2">
             {/* Mic Mute */}
             <button
@@ -863,8 +863,8 @@ SAFETY RULES:
               disabled={!isActive}
               className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
                 isMuted
-                  ? 'bg-red-50 border-red-200 text-red-600'
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  ? 'bg-red-50 dark:bg-red-950/80 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
               } disabled:opacity-40 disabled:pointer-events-none`}
               title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             >
@@ -877,8 +877,8 @@ SAFETY RULES:
               disabled={!isActive}
               className={`p-2.5 rounded-xl border transition-all flex items-center justify-center ${
                 isSpeakerMuted
-                  ? 'bg-amber-50 border-amber-200 text-amber-600'
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  ? 'bg-amber-50 dark:bg-amber-950/80 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
               } disabled:opacity-40 disabled:pointer-events-none`}
               title={isSpeakerMuted ? "Mute Speaker Output" : "Unmute Speaker Output"}
             >
@@ -891,7 +891,7 @@ SAFETY RULES:
               disabled={status === 'connecting'}
               className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs ${
                 isActive
-                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  ? 'bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700'
                   : 'bg-teal-700 text-white hover:bg-teal-800'
               } disabled:opacity-50`}
             >
@@ -918,9 +918,9 @@ SAFETY RULES:
                 window.location.href = "tel:911";
               }
             }}
-            className="w-full py-2 px-3 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 px-3 rounded-lg bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-bold transition-colors flex items-center justify-center gap-2"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+            <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
             <span>Emergency 911 Protocol Override</span>
           </button>
         </div>

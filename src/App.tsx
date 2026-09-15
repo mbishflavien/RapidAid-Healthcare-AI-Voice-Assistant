@@ -607,7 +607,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-teal-500/20 overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-teal-500/20 overflow-hidden transition-colors">
       {/* Mobile Backdrop for History Drawer */}
       {showHistory && (
         <div 
@@ -621,28 +621,28 @@ export default function App() {
       <motion.aside
         initial={false}
         animate={{ width: showHistory ? 320 : 0, opacity: showHistory ? 1 : 0 }}
-        className={`fixed inset-y-0 left-0 z-50 lg:relative lg:z-30 shrink-0 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-2xl lg:shadow-none transition-all ${
+        className={`fixed inset-y-0 left-0 z-50 lg:relative lg:z-30 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden shadow-2xl lg:shadow-none transition-all ${
           !showHistory ? 'pointer-events-none lg:pointer-events-auto' : ''
         }`}
       >
         <div className="w-80 max-w-[85vw] sm:max-w-none flex flex-col h-full">
           {/* Institutional Clinic Header */}
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center text-white shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-teal-700 text-white flex items-center justify-center shadow-xs shrink-0">
                 <Stethoscope className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 tracking-tight block text-sm leading-tight">RapidAid</span>
-                  <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-mono text-[9px] font-bold">CLINICAL</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 tracking-tight block text-sm leading-tight">RapidAid</span>
+                  <span className="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border dark:border-teal-800 font-mono text-[9px] font-bold">CLINICAL</span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-medium">Electronic Health Records</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Electronic Health Records</span>
               </div>
             </div>
             <button
               onClick={() => setShowHistory(false)}
-              className="p-1.5 hover:bg-slate-200/60 rounded-lg transition-colors text-slate-400 hover:text-slate-700"
+              className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -652,7 +652,7 @@ export default function App() {
           <div className="p-3.5">
             <button
               onClick={startNewSession}
-              className="w-full py-2.5 px-3.5 rounded-xl bg-teal-50 border border-teal-200 hover:bg-teal-100/80 hover:border-teal-300 transition-all flex items-center gap-2.5 text-xs font-semibold text-teal-900 group shadow-xs"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 hover:bg-teal-100/80 dark:hover:bg-teal-900/50 hover:border-teal-300 dark:hover:border-teal-700 transition-all flex items-center gap-2.5 text-xs font-semibold text-teal-900 dark:text-teal-200 group shadow-xs"
             >
               <div className="w-6 h-6 rounded-lg bg-teal-700 flex items-center justify-center text-white shadow-xs">
                 <Plus className="w-3.5 h-3.5" />
@@ -663,15 +663,15 @@ export default function App() {
 
           {/* Past Consultations / Encounters List */}
           <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1 custom-scrollbar">
-            <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               <span>Patient Encounters</span>
-              <span className="font-mono text-slate-400 font-normal">{sessions.length} recorded</span>
+              <span className="font-mono text-slate-400 dark:text-slate-500 font-normal">{sessions.length} recorded</span>
             </div>
             {user ? (
               sessions.length === 0 ? (
-                <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <FileText className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-medium text-slate-500">No patient encounters recorded yet</p>
+                <div className="p-6 text-center bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                  <FileText className="w-6 h-6 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">No patient encounters recorded yet</p>
                 </div>
               ) : (
                 sessions.map(session => (
@@ -689,38 +689,38 @@ export default function App() {
                     }}
                     className={`w-full p-3 rounded-xl text-left transition-all group flex flex-col gap-1 border ${
                       currentSessionId === session.id
-                        ? 'bg-teal-50/80 border-teal-300 shadow-xs'
-                        : 'bg-transparent border-transparent hover:bg-slate-100/80 text-slate-700'
+                        ? 'bg-teal-50/80 dark:bg-teal-950/70 border-teal-300 dark:border-teal-700 shadow-xs'
+                        : 'bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <span className={`text-xs font-bold truncate flex-1 ${currentSessionId === session.id ? 'text-teal-950' : 'text-slate-800'}`}>
+                      <span className={`text-xs font-bold truncate flex-1 ${currentSessionId === session.id ? 'text-teal-950 dark:text-teal-200' : 'text-slate-800 dark:text-slate-200'}`}>
                         {session.title}
                       </span>
                       <Trash2
                         onClick={(e) => deleteSession(session.id, e)}
-                        className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity ml-2 text-slate-400 shrink-0"
+                        className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-opacity ml-2 text-slate-400 dark:text-slate-500 shrink-0"
                       />
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3 h-3" />
                         <span>{new Date(session.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                       </div>
-                      <span className="font-mono text-[9px] text-slate-400">ENC#{session.id.slice(0, 5).toUpperCase()}</span>
+                      <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">ENC#{session.id.slice(0, 5).toUpperCase()}</span>
                     </div>
                   </button>
                 ))
               )
             ) : (
-              <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs space-y-2">
+              <div className="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs space-y-2">
                 <span className="font-bold block">Patient Session Unregistered</span>
-                <span className="text-[11px] text-amber-700 leading-relaxed block">
+                <span className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed block">
                   Sign in with clinician or patient credentials to persist health records securely.
                 </span>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="w-full py-1.5 bg-amber-700 text-white rounded-lg font-semibold text-xs hover:bg-amber-800 transition-colors"
+                  className="w-full py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-semibold text-xs transition-colors"
                 >
                   Clinical Sign In
                 </button>
@@ -729,17 +729,17 @@ export default function App() {
           </div>
 
           {/* User Account / Identity Bar */}
-          <div className="p-3 border-t border-slate-200 bg-slate-50/60">
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60">
             {user ? (
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
-                <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border dark:border-teal-800 flex items-center justify-center font-bold text-xs shrink-0">
                   {user.email ? user.email[0].toUpperCase() : 'P'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">{user.displayName || user.email}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user.displayName || user.email}</p>
                   <button
                     onClick={() => signOut(firebaseAuth)}
-                    className="text-[10px] font-semibold text-slate-400 hover:text-red-600 uppercase tracking-wider transition-colors"
+                    className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 uppercase tracking-wider transition-colors"
                   >
                     Disconnect Session
                   </button>
@@ -748,7 +748,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="w-full py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors"
+                className="w-full py-2 rounded-xl bg-slate-900 dark:bg-teal-700 text-white text-xs font-semibold hover:bg-slate-800 dark:hover:bg-teal-800 transition-colors"
               >
                 Access Patient Portal
               </button>
@@ -758,14 +758,14 @@ export default function App() {
       </motion.aside>
 
       {/* Main Medical Workspace (Center: Chat & Consultation) */}
-      <div className="flex-1 flex flex-col min-w-0 relative h-full bg-[#F8FAFC]">
+      <div className="flex-1 flex flex-col min-w-0 relative h-full bg-[#F8FAFC] dark:bg-slate-950 transition-colors">
         {/* Clinical Workspace Header Bar */}
-        <header className="h-14 sm:h-16 px-2.5 sm:px-6 lg:px-8 border-b border-slate-200 bg-white/95 backdrop-blur-xs flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <header className="h-14 sm:h-16 px-2 sm:px-4 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-between sticky top-0 z-20 transition-colors">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             {!showHistory && (
               <button
                 onClick={() => setShowHistory(true)}
-                className="p-1.5 sm:p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors shrink-0"
+                className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
                 title="Consultation History"
               >
                 <History className="w-4 h-4" />
@@ -774,14 +774,14 @@ export default function App() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] shrink-0" />
-                <h1 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-xs md:max-w-md">
+                <h1 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate max-w-[85px] xs:max-w-[130px] sm:max-w-xs md:max-w-md">
                   {user ? (activeSession?.title || 'Clinical Encounter') : 'RapidAid Consultation'}
                 </h1>
-                <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[9px] font-semibold border border-slate-200 shrink-0">
+                <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[9px] font-semibold border border-slate-200 dark:border-slate-700 shrink-0">
                   ENC-ACTIVE
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-medium hidden sm:block truncate">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block truncate">
                 Clinical Diagnostic Protocol • Evidence-Based Triage Matrix
               </p>
             </div>
@@ -791,33 +791,33 @@ export default function App() {
             {/* Clinical SOAP Chart Button */}
             <button
               onClick={() => setShowSoapModal(true)}
-              className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-200 text-xs font-semibold text-teal-900 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
+              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
               title="Open Clinical Encounter Progress Note (SOAP)"
             >
-              <FileText className="w-3.5 h-3.5 text-teal-800" />
-              <span className="hidden sm:inline">SOAP Note</span>
+              <FileText className="w-3.5 h-3.5 text-teal-800 dark:text-teal-300" />
+              <span className="hidden xs:inline">SOAP Note</span>
             </button>
 
             {/* Clinical Decision Support (CDS) Tools */}
             <button
               onClick={() => setShowCdsModal(true)}
-              className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
+              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
               title="Clinical Decision Support (qSOFA, Red Flags, GCS)"
             >
-              <Stethoscope className="w-3.5 h-3.5 text-teal-700" />
+              <Stethoscope className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
               <span className="hidden md:inline">CDS Tools</span>
             </button>
 
             {/* Quick Action Buttons */}
             <button
               onClick={() => setShowMedications(true)}
-              className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
+              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
               title="eMAR Active Pharmacotherapy"
             >
-              <Pill className="w-3.5 h-3.5 text-teal-700" />
+              <Pill className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
               <span className="hidden sm:inline">eMAR</span>
               {medications.length > 0 && (
-                <span className="px-1.5 py-0.2 bg-teal-100 text-teal-800 rounded-full text-[10px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border dark:border-teal-800 rounded-full text-[10px] font-mono font-bold">
                   {medications.length}
                 </span>
               )}
@@ -827,7 +827,7 @@ export default function App() {
             <div className="hidden lg:flex items-center gap-1.5">
               <button
                 onClick={() => setShowResources(true)}
-                className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
                 title="Medical Reference Library"
               >
                 <BookOpen className="w-4 h-4" />
@@ -836,7 +836,7 @@ export default function App() {
               {user && (
                 <button
                   onClick={() => setShowProfileModal(true)}
-                  className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                  className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
                   title="Patient Chart & Health Profile"
                 >
                   <UserIcon className="w-4 h-4" />
@@ -847,14 +847,14 @@ export default function App() {
                 <>
                   <button
                     onClick={downloadTranscript}
-                    className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
                     title="Export Clinical Encounter Record"
                   >
                     <Download className="w-4 h-4" />
                   </button>
                   <button
                     onClick={clearCurrentChat}
-                    className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-red-600 transition-colors shadow-xs"
+                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors shadow-xs"
                     title="Clear Encounter Messages"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -867,7 +867,7 @@ export default function App() {
             <div className="relative lg:hidden">
               <button
                 onClick={() => setShowMobileActions(!showMobileActions)}
-                className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors shadow-xs"
+                className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
                 title="More clinical actions"
                 aria-label="More actions"
               >
@@ -880,16 +880,16 @@ export default function App() {
                     className="fixed inset-0 z-30" 
                     onClick={() => setShowMobileActions(false)} 
                   />
-                  <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-40 py-1 text-xs">
+                  <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-40 py-1 text-xs">
                     {user && (
                       <button
                         onClick={() => {
                           setShowMobileActions(false);
                           setShowProfileModal(true);
                         }}
-                        className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 text-slate-700"
+                        className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
                       >
-                        <UserIcon className="w-4 h-4 text-teal-700" />
+                        <UserIcon className="w-4 h-4 text-teal-700 dark:text-teal-400" />
                         <span>Patient Health Profile</span>
                       </button>
                     )}
@@ -898,9 +898,9 @@ export default function App() {
                         setShowMobileActions(false);
                         setShowResources(true);
                       }}
-                      className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 text-slate-700"
+                      className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
                     >
-                      <BookOpen className="w-4 h-4 text-teal-700" />
+                      <BookOpen className="w-4 h-4 text-teal-700 dark:text-teal-400" />
                       <span>Medical Library</span>
                     </button>
                     {currentMessages.length > 0 && (
@@ -910,9 +910,9 @@ export default function App() {
                             setShowMobileActions(false);
                             downloadTranscript();
                           }}
-                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 text-slate-700"
+                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
                         >
-                          <Download className="w-4 h-4 text-teal-700" />
+                          <Download className="w-4 h-4 text-teal-700 dark:text-teal-400" />
                           <span>Export Encounter</span>
                         </button>
                         <button
@@ -920,9 +920,9 @@ export default function App() {
                             setShowMobileActions(false);
                             clearCurrentChat();
                           }}
-                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-red-50 text-red-700"
+                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-700 dark:text-red-400"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                           <span>Clear Chat Messages</span>
                         </button>
                       </>
@@ -935,16 +935,16 @@ export default function App() {
             {/* Telehealth Audio Station Toggle */}
             <button
               onClick={() => setShowVoiceCompanion(prev => !prev)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs shrink-0 ${
+              className={`p-1.5 xs:px-2.5 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs shrink-0 ${
                 showVoiceCompanion
                   ? 'bg-teal-700 border-teal-700 text-white'
-                  : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
               title={showVoiceCompanion ? "Hide Telehealth Audio Panel" : "Open Telehealth Audio Exam Station"}
             >
               <Radio className={`w-3.5 h-3.5 ${showVoiceCompanion ? 'animate-pulse' : ''}`} />
               <span className="hidden sm:inline">Audio Exam</span>
-              <span className={`w-1.5 h-1.5 rounded-full ${showVoiceCompanion ? 'bg-emerald-300' : 'bg-slate-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${showVoiceCompanion ? 'bg-emerald-300' : 'bg-slate-400 dark:bg-slate-500'}`} />
             </button>
           </div>
         </header>
@@ -965,13 +965,13 @@ export default function App() {
         <main className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-4 sm:space-y-5">
           <div className="max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto space-y-4 sm:space-y-5 pb-32 sm:pb-36">
             {/* Clinical Safety Protocol Notice */}
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-                <Info className="w-4 h-4 text-amber-700" />
+            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                <Info className="w-4 h-4 text-amber-700 dark:text-amber-400" />
               </div>
               <div className="text-xs">
-                <span className="font-bold text-slate-900 block">Clinical Triage Protocol & Decision Support</span>
-                <span className="text-slate-600 leading-relaxed font-medium text-[11px]">
+                <span className="font-bold text-slate-900 dark:text-slate-100 block">Clinical Triage Protocol & Decision Support</span>
+                <span className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-[11px]">
                   RapidAid applies institutional clinical assessment algorithms. For life-threatening emergencies (acute anaphylaxis, severe cardiac chest pain, stroke symptoms), invoke immediate emergency dispatch (911).
                 </span>
               </div>
@@ -982,7 +982,7 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3.5 rounded-xl bg-teal-800 text-white shadow-sm flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
+                className="p-3.5 rounded-xl bg-teal-800 dark:bg-teal-900 text-white shadow-sm flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
@@ -1006,18 +1006,18 @@ export default function App() {
             {currentMessages.length === 0 && (
               <div className="py-6 text-center space-y-6">
                 <div className="relative inline-block">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-xs">
-                    <Stethoscope className="w-7 h-7 text-teal-800" />
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-center mx-auto shadow-xs">
+                    <Stethoscope className="w-7 h-7 text-teal-800 dark:text-teal-300" />
                   </div>
                 </div>
                 <div className="space-y-1.5 max-w-lg mx-auto">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-mono font-bold uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-[10px] font-mono font-bold uppercase tracking-wider">
                     <span>Dept. of Emergency & Ambulatory Triage</span>
                     <span>•</span>
                     <span>Station 04</span>
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Clinical Decision Support Station</h2>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Clinical Decision Support Station</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                     Submit patient symptoms, vital signs, or pharmacology questions to initiate an evidence-based clinical evaluation, or select a rapid clinical tool below.
                   </p>
                 </div>
@@ -1026,30 +1026,30 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
                   <button
                     onClick={() => setShowCdsModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                   >
-                    <Activity className="w-3.5 h-3.5 text-teal-700" />
+                    <Activity className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
                     <span>qSOFA Sepsis Screen</span>
                   </button>
                   <button
                     onClick={() => setShowCdsModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                   >
-                    <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                    <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                     <span>Red Flag Checklist</span>
                   </button>
                   <button
                     onClick={() => setShowSoapModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                   >
-                    <FileText className="w-3.5 h-3.5 text-teal-700" />
+                    <FileText className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
                     <span>Open Blank SOAP Note</span>
                   </button>
                   <button
                     onClick={() => setShowMedications(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                   >
-                    <Pill className="w-3.5 h-3.5 text-teal-700" />
+                    <Pill className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
                     <span>eMAR Medications</span>
                   </button>
                 </div>
@@ -1060,20 +1060,20 @@ export default function App() {
                     <button
                       key={index}
                       onClick={() => handleSendText(undefined, item.prompt)}
-                      className="p-4 rounded-xl bg-white border border-slate-200 hover:border-teal-500 hover:shadow-xs transition-all group flex flex-col justify-between text-left"
+                      className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-xs transition-all group flex flex-col justify-between text-left"
                     >
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-base">{item.icon}</span>
-                          <span className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
                             {item.title}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">
                           "{item.prompt}"
                         </p>
                       </div>
-                      <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider mt-3 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider mt-3 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                         Initiate Assessment &rarr;
                       </span>
                     </button>
@@ -1093,7 +1093,7 @@ export default function App() {
                 <div className={`relative ${msg.analysis ? 'w-full' : 'max-w-[92%] sm:max-w-[85%] md:max-w-[80%]'}`}>
                   {msg.isUser ? (
                     // Patient Message Bubble
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-white shadow-xs">
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 dark:bg-slate-800 border dark:border-slate-700 text-white shadow-xs">
                       <div className="flex items-center gap-2 mb-1 text-[10px] text-teal-400 font-mono font-bold uppercase tracking-wider">
                         <span>Patient Intake</span>
                         {msg.fromVoice && (
@@ -1112,38 +1112,38 @@ export default function App() {
                     <div className="space-y-3 w-full">
                       {/* Structured Clinical Triage Assessment Card if generated */}
                       {msg.analysis && (
-                        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs mb-3">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs mb-3">
                           {/* Card Header with Clinical Urgency Pill */}
                           <div className={`px-4 sm:px-5 py-3 sm:py-3.5 flex flex-wrap items-center justify-between gap-2 border-b ${
-                            msg.analysis.urgency === 'Emergency' ? 'bg-red-50/90 border-red-200 text-red-800' :
-                            msg.analysis.urgency === 'High' ? 'bg-amber-50/90 border-amber-200 text-amber-800' :
-                            'bg-teal-50/90 border-teal-200 text-teal-900'
+                            msg.analysis.urgency === 'Emergency' ? 'bg-red-50/90 dark:bg-red-950/80 border-red-200 dark:border-red-900 text-red-800 dark:text-red-300' :
+                            msg.analysis.urgency === 'High' ? 'bg-amber-50/90 dark:bg-amber-950/80 border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300' :
+                            'bg-teal-50/90 dark:bg-teal-950/80 border-teal-200 dark:border-teal-900 text-teal-900 dark:text-teal-200'
                           }`}>
                             <div className="flex items-center gap-2.5">
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                msg.analysis.urgency === 'Emergency' ? 'bg-red-100 text-red-700' :
-                                msg.analysis.urgency === 'High' ? 'bg-amber-100 text-amber-700' :
-                                'bg-teal-100 text-teal-800'
+                                msg.analysis.urgency === 'Emergency' ? 'bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-300' :
+                                msg.analysis.urgency === 'High' ? 'bg-amber-100 dark:bg-amber-900/80 text-amber-700 dark:text-amber-300' :
+                                'bg-teal-100 dark:bg-teal-900/80 text-teal-800 dark:text-teal-300'
                               }`}>
                                 <ShieldAlert className="w-4 h-4" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h4 className="text-xs font-bold uppercase tracking-wider">Clinical Triage Assessment</h4>
-                                  <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 border border-current/20">ICD-TRIAGE</span>
+                                  <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 dark:bg-slate-800/80 border border-current/20">ICD-TRIAGE</span>
                                 </div>
                                 <p className="text-[11px] font-medium opacity-85">
-                                  Reported: {msg.analysis.symptoms.join(', ')}
+                                   Reported: {msg.analysis.symptoms.join(', ')}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                               <button
                                 onClick={() => setShowSoapModal(true)}
-                                className="px-2 py-1 rounded bg-white/90 hover:bg-white text-slate-800 text-[10px] font-mono font-bold flex items-center gap-1 border border-current/20 transition-colors shadow-xs"
+                                className="px-2 py-1 rounded bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-mono font-bold flex items-center gap-1 border border-current/20 transition-colors shadow-xs"
                                 title="Open full Encounter SOAP Progress Note"
                               >
-                                <FileText className="w-3 h-3 text-teal-800" />
+                                <FileText className="w-3 h-3 text-teal-800 dark:text-teal-400" />
                                 <span>SOAP Note</span>
                               </button>
                               <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
@@ -1161,21 +1161,21 @@ export default function App() {
                             {/* Differential Diagnoses / Potential Causes */}
                             <div>
                               <div className="flex items-center justify-between mb-2.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                   Differential Diagnoses / Etiology
                                 </p>
-                                <span className="text-[9px] font-mono text-slate-400">CLINICAL LIKELIHOOD</span>
+                                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">CLINICAL LIKELIHOOD</span>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                 {msg.analysis.potentialConditions.map((cond, cIdx) => (
-                                  <div key={cIdx} className="p-3 rounded-xl bg-slate-50/80 border border-slate-200">
+                                  <div key={cIdx} className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs font-bold text-slate-900">{cond.name}</span>
-                                      <span className="text-[9px] font-mono font-bold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded">
+                                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{cond.name}</span>
+                                      <span className="text-[9px] font-mono font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/80 border border-teal-200 dark:border-teal-800 px-1.5 py-0.5 rounded">
                                         {cond.likelihood}
                                       </span>
                                     </div>
-                                    <p className="text-[11px] text-slate-600 font-medium leading-relaxed">{cond.description}</p>
+                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{cond.description}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1183,13 +1183,13 @@ export default function App() {
 
                             {/* Recommended Clinical Roadmap */}
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
                                 Recommended Clinical Action Protocol
                               </p>
                               <div className="space-y-1.5">
                                 {msg.analysis.recommendations.map((rec, rIdx) => (
-                                  <div key={rIdx} className="flex items-start gap-2.5 text-xs text-slate-700 font-medium p-2 rounded-lg bg-slate-50/50 border border-slate-100">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-700 shrink-0 mt-0.5" />
+                                  <div key={rIdx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium p-2 rounded-lg bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400 shrink-0 mt-0.5" />
                                     <span className="leading-relaxed">{rec}</span>
                                   </div>
                                 ))}
@@ -1201,20 +1201,20 @@ export default function App() {
 
                       {/* Main Clinical Note (Markdown Formatted) */}
                       {msg.text && (
-                        <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-200 text-slate-800 shadow-xs relative">
-                          <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 prose-ul:my-2 prose-li:my-0.5 text-xs sm:text-sm">
+                        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-xs relative">
+                          <div className="prose prose-sm prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-slate-100 prose-ul:my-2 prose-li:my-0.5 text-xs sm:text-sm overflow-x-auto">
                             <Markdown>{msg.text}</Markdown>
                           </div>
 
                           {/* Message Footer / Clinical Telemetry */}
-                          <div className="mt-3 sm:mt-4 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                          <div className="mt-3 sm:mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500">
                             <div className="flex items-center gap-2">
                               <div className="w-4 h-4 rounded bg-teal-700 text-white flex items-center justify-center text-[9px] font-bold">
                                 +
                               </div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">RapidAid Clinical AI</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">RapidAid Clinical AI</span>
                               {msg.fromVoice && (
-                                <span className="px-1.5 py-0.2 rounded bg-teal-50 border border-teal-200 text-teal-800 text-[9px] font-mono font-bold">
+                                <span className="px-1.5 py-0.2 rounded bg-teal-50 dark:bg-teal-950/80 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-[9px] font-mono font-bold">
                                   VOICE ENCOUNTER
                                 </span>
                               )}
@@ -1230,13 +1230,13 @@ export default function App() {
                                 onClick={() => speakText(msg.text!, msg.id || `${idx}`)}
                                 className={`p-1.5 rounded-lg transition-colors ${
                                   speakingMessageId === (msg.id || `${idx}`)
-                                    ? 'bg-teal-50 text-teal-700 font-bold'
-                                    : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
+                                    ? 'bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 font-bold'
+                                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                                 }`}
                                 title={speakingMessageId === (msg.id || `${idx}`) ? "Stop Audio Readout" : "Audio Readout"}
                               >
                                 {speakingMessageId === (msg.id || `${idx}`) ? (
-                                  <VolumeX className="w-3.5 h-3.5 text-teal-700 animate-pulse" />
+                                  <VolumeX className="w-3.5 h-3.5 text-teal-700 dark:text-teal-300 animate-pulse" />
                                 ) : (
                                   <Volume2 className="w-3.5 h-3.5" />
                                 )}
@@ -1245,11 +1245,11 @@ export default function App() {
                               {/* Copy Clinical Advice */}
                               <button
                                 onClick={() => copyMessage(msg.text!, msg.id || `${idx}`)}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                                 title="Copy Clinical Text"
                               >
                                 {copiedId === (msg.id || `${idx}`) ? (
-                                  <Check className="w-3.5 h-3.5 text-teal-700" />
+                                  <Check className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
                                 ) : (
                                   <Copy className="w-3.5 h-3.5" />
                                 )}
@@ -1269,17 +1269,17 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-slate-200 max-w-xs shadow-xs"
+                className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-xs shadow-xs"
               >
                 <div className="flex gap-1">
                   <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '150ms' }} />
                   <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-                <span className="text-xs font-semibold text-slate-600 font-mono text-[11px]">Synthesizing clinical evaluation...</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 font-mono text-[11px]">Synthesizing clinical evaluation...</span>
                 <button
                   onClick={handleStopGenerating}
-                  className="ml-auto p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                  className="ml-auto p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   title="Stop Response"
                 >
                   <Square className="w-3.5 h-3.5" />
@@ -1289,12 +1289,12 @@ export default function App() {
 
             {/* Error Banner */}
             {errorMessage && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-200 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
                   <span className="font-semibold">{errorMessage}</span>
                 </div>
-                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-700">
+                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-700 dark:hover:text-red-300">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1305,11 +1305,11 @@ export default function App() {
         </main>
 
         {/* Sticky Clinical Order & Intake Input Box */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent pt-3 sm:pt-4 pb-3 sm:pb-4 px-2.5 sm:px-6 lg:px-8 z-20">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#F8FAFC] dark:from-slate-950 via-[#F8FAFC]/95 dark:via-slate-950/95 to-transparent pt-3 sm:pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] px-2.5 sm:px-6 lg:px-8 z-20 transition-colors">
           <div className="max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
             <form
               onSubmit={(e) => handleSendText(e)}
-              className="relative bg-white border border-slate-300 rounded-xl shadow-xs p-2 pl-3 sm:pl-3.5 flex items-center gap-2 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 transition-all"
+              className="relative bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xs p-2 pl-3 sm:pl-3.5 flex items-center gap-2 focus-within:border-teal-600 dark:focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-100 dark:focus-within:ring-teal-950 transition-all"
             >
               <textarea
                 ref={inputRef}
@@ -1323,14 +1323,14 @@ export default function App() {
                 }}
                 rows={1}
                 placeholder="Enter patient symptoms, vitals, or pharmacology inquiry..."
-                className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 resize-none max-h-32 py-1"
+                className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none max-h-32 py-1"
               />
 
               {isGenerating ? (
                 <button
                   type="button"
                   onClick={handleStopGenerating}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold text-xs transition-colors flex items-center gap-1.5 shrink-0"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shrink-0"
                 >
                   <Square className="w-3.5 h-3.5" />
                   <span>Stop</span>
@@ -1346,7 +1346,7 @@ export default function App() {
                 </button>
               )}
             </form>
-            <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 px-1 font-mono">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 px-1 font-mono">
               <span className="truncate">RapidAid Clinical Intelligence</span>
               <span className="hidden sm:inline">CONFIDENTIAL • HIPAA PROTOCOL</span>
               <span className="sm:hidden">CONFIDENTIAL</span>
@@ -1396,24 +1396,24 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl z-10"
+              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xl z-10"
             >
-              <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+              <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-teal-100 border border-teal-200 flex items-center justify-center text-teal-800">
+                  <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-teal-800 dark:text-teal-300 shrink-0">
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-slate-900">Clinical Knowledge & Reference Library</h3>
-                      <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-teal-100 text-teal-800 font-bold">VERIFIED</span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Clinical Knowledge & Reference Library</h3>
+                      <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border dark:border-teal-800 font-bold">VERIFIED</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 font-medium">Authoritative biomedical guidelines and evidence repositories</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Authoritative biomedical guidelines and evidence repositories</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowResources(false)}
-                  className="p-1.5 hover:bg-slate-200/60 rounded-lg transition-colors text-slate-400 hover:text-slate-700"
+                  className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1426,14 +1426,14 @@ export default function App() {
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3.5 rounded-xl bg-slate-50/80 hover:bg-teal-50/60 border border-slate-200 hover:border-teal-300 transition-all flex items-start justify-between group block shadow-xs"
+                    className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 hover:bg-teal-50/60 dark:hover:bg-teal-950/40 border border-slate-200 dark:border-slate-700 hover:border-teal-300 dark:hover:border-teal-700 transition-all flex items-start justify-between group block shadow-xs"
                   >
                     <div>
-                      <span className="text-[9px] font-mono font-bold text-teal-800 bg-white border border-slate-200 px-1.5 py-0.5 rounded uppercase tracking-wider">{res.category}</span>
-                      <h4 className="text-xs font-bold text-slate-900 group-hover:text-teal-900 transition-colors mt-1.5">{res.name}</h4>
-                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed font-medium">{res.description}</p>
+                      <span className="text-[9px] font-mono font-bold text-teal-800 dark:text-teal-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded uppercase tracking-wider">{res.category}</span>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-900 dark:group-hover:text-teal-200 transition-colors mt-1.5">{res.name}</h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed font-medium">{res.description}</p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-teal-700 shrink-0 ml-3 mt-1" />
+                    <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-teal-700 dark:group-hover:text-teal-300 shrink-0 ml-3 mt-1" />
                   </a>
                 ))}
               </div>
