@@ -16,13 +16,12 @@ const THEME_STORAGE_KEY = 'rapidaid_clinical_theme';
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY);
-      if (stored === 'dark' || stored === 'light') {
-        return stored;
-      }
-      // Check system preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, 'light');
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+      } catch {
+        // ignore storage errors
       }
     }
     return 'light';
