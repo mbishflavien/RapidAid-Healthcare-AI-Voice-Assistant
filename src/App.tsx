@@ -34,11 +34,16 @@ import {
   Radio,
   FileText,
   ShieldCheck,
-  MoreVertical
+  MoreVertical,
+  Sun,
+  Moon,
+  SlidersHorizontal,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import { AuthModal } from './components/AuthModal';
 import { ProfileModal } from './components/ProfileModal';
 import { MedicationPanel } from './components/MedicationPanel';
@@ -124,6 +129,7 @@ const SUGGESTED_PROMPTS = [
 
 export default function App() {
   const { user, userData } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
@@ -133,16 +139,17 @@ export default function App() {
   const [messages, setMessages] = useState<Transcription[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Voice Companion on the side - auto-open on desktop, closed by default on mobile/tablet
-  const [showVoiceCompanion, setShowVoiceCompanion] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 1024;
-    }
-    return false;
-  });
+  // Voice Companion on the side - closed by default to keep workspace minimal
+  const [showVoiceCompanion, setShowVoiceCompanion] = useState(false);
 
-  // Mobile overflow action sheet dropdown
-  const [showMobileActions, setShowMobileActions] = useState(false);
+  // Unified Tools dropdown menu
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
+
+  // Patient telemetry banner - hidden by default for minimal distraction-free triage
+  const [showPatientBanner, setShowPatientBanner] = useState(false);
+
+  // Dismissible safety notice - subtle
+  const [showSafetyNotice, setShowSafetyNotice] = useState(false);
 
   // Chat input and generation state
   const [textInput, setTextInput] = useState('');
@@ -220,9 +227,7 @@ export default function App() {
   // Handle window resize for responsive layout syncing
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setShowMobileActions(false);
-      }
+      setShowToolsMenu(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -759,223 +764,225 @@ export default function App() {
 
       {/* Main Medical Workspace (Center: Chat & Consultation) */}
       <div className="flex-1 flex flex-col min-w-0 relative h-full bg-[#F8FAFC] dark:bg-slate-950 transition-colors">
-        {/* Clinical Workspace Header Bar */}
-        <header className="h-14 sm:h-16 px-2 sm:px-4 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-between sticky top-0 z-20 transition-colors">
-          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+        {/* Minimal Clinical Workspace Header */}
+        <header className="h-14 px-3 sm:px-6 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs flex items-center justify-between sticky top-0 z-20 transition-colors">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {!showHistory && (
               <button
                 onClick={() => setShowHistory(true)}
-                className="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
-                title="Consultation History"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                title="Open Encounters History"
               >
                 <History className="w-4 h-4" />
               </button>
             )}
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] shrink-0" />
-                <h1 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate max-w-[85px] xs:max-w-[130px] sm:max-w-xs md:max-w-md">
-                  {user ? (activeSession?.title || 'Clinical Encounter') : 'RapidAid Consultation'}
-                </h1>
-                <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[9px] font-semibold border border-slate-200 dark:border-slate-700 shrink-0">
-                  ENC-ACTIVE
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block truncate">
-                Clinical Diagnostic Protocol • Evidence-Based Triage Matrix
-              </p>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_#10b981]" />
+              <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                {user ? (activeSession?.title || 'Clinical Encounter') : 'RapidAid'}
+              </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Clinical SOAP Chart Button */}
             <button
               onClick={() => setShowSoapModal(true)}
-              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
+              className="px-2.5 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors flex items-center gap-1.5 shadow-xs"
               title="Open Clinical Encounter Progress Note (SOAP)"
             >
               <FileText className="w-3.5 h-3.5 text-teal-800 dark:text-teal-300" />
-              <span className="hidden xs:inline">SOAP Note</span>
+              <span className="hidden xs:inline">SOAP</span>
             </button>
 
-            {/* Clinical Decision Support (CDS) Tools */}
+            {/* Audio Exam Station Toggle */}
             <button
-              onClick={() => setShowCdsModal(true)}
-              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
-              title="Clinical Decision Support (qSOFA, Red Flags, GCS)"
+              onClick={() => setShowVoiceCompanion(prev => !prev)}
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs ${
+                showVoiceCompanion
+                  ? 'bg-teal-700 border-teal-700 text-white'
+                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+              }`}
+              title={showVoiceCompanion ? "Close Audio Exam Station" : "Open Audio Exam Station"}
             >
-              <Stethoscope className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-              <span className="hidden md:inline">CDS Tools</span>
+              <Radio className={`w-3.5 h-3.5 ${showVoiceCompanion ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">Audio</span>
             </button>
 
-            {/* Quick Action Buttons */}
+            {/* Quick Dark/Light Theme Toggle */}
             <button
-              onClick={() => setShowMedications(true)}
-              className="p-1.5 xs:px-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 shadow-xs shrink-0"
-              title="eMAR Active Pharmacotherapy"
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
+              title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
             >
-              <Pill className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-              <span className="hidden sm:inline">eMAR</span>
-              {medications.length > 0 && (
-                <span className="px-1.5 py-0.2 bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border dark:border-teal-800 rounded-full text-[10px] font-mono font-bold">
-                  {medications.length}
-                </span>
-              )}
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             </button>
 
-            {/* Desktop Direct Action Buttons */}
-            <div className="hidden lg:flex items-center gap-1.5">
+            {/* Unified Tools Dropdown */}
+            <div className="relative">
               <button
-                onClick={() => setShowResources(true)}
-                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
-                title="Medical Reference Library"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-
-              {user && (
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
-                  title="Patient Chart & Health Profile"
-                >
-                  <UserIcon className="w-4 h-4" />
-                </button>
-              )}
-
-              {currentMessages.length > 0 && (
-                <>
-                  <button
-                    onClick={downloadTranscript}
-                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
-                    title="Export Clinical Encounter Record"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={clearCurrentChat}
-                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors shadow-xs"
-                    title="Clear Encounter Messages"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Mobile/Tablet Secondary Actions Dropdown */}
-            <div className="relative lg:hidden">
-              <button
-                onClick={() => setShowMobileActions(!showMobileActions)}
-                className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
-                title="More clinical actions"
-                aria-label="More actions"
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors shadow-xs flex items-center gap-1 ${
+                  showToolsMenu
+                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+                title="Clinical Tools & Options"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
 
-              {showMobileActions && (
+              {showToolsMenu && (
                 <>
-                  <div 
-                    className="fixed inset-0 z-30" 
-                    onClick={() => setShowMobileActions(false)} 
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowToolsMenu(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-40 py-1 text-xs">
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-40 py-1.5 text-xs">
+                    {/* Patient Vitals Bar Toggle */}
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        setShowPatientBanner(!showPatientBanner);
+                      }}
+                      className="w-full px-3.5 py-2 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Activity className="w-4 h-4 text-teal-700 dark:text-teal-400" />
+                        <span>Patient Vitals Bar</span>
+                      </div>
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                        showPatientBanner
+                          ? 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                      }`}>
+                        {showPatientBanner ? 'ON' : 'OFF'}
+                      </span>
+                    </button>
+
+                    {/* CDS Tools */}
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        setShowCdsModal(true);
+                      }}
+                      className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    >
+                      <Stethoscope className="w-4 h-4 text-teal-700 dark:text-teal-400" />
+                      <span>Decision Support (CDS)</span>
+                    </button>
+
+                    {/* eMAR Medications */}
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        setShowMedications(true);
+                      }}
+                      className="w-full px-3.5 py-2 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Pill className="w-4 h-4 text-teal-700 dark:text-teal-400" />
+                        <span>eMAR Medications</span>
+                      </div>
+                      {medications.length > 0 && (
+                        <span className="px-1.5 py-0.2 bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 rounded-full text-[10px] font-mono font-bold">
+                          {medications.length}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Medical Library */}
+                    <button
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        setShowResources(true);
+                      }}
+                      className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    >
+                      <BookOpen className="w-4 h-4 text-teal-700 dark:text-teal-400" />
+                      <span>Medical Library</span>
+                    </button>
+
+                    {/* Patient Profile */}
                     {user && (
                       <button
                         onClick={() => {
-                          setShowMobileActions(false);
+                          setShowToolsMenu(false);
                           setShowProfileModal(true);
                         }}
-                        className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                        className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
                       >
                         <UserIcon className="w-4 h-4 text-teal-700 dark:text-teal-400" />
                         <span>Patient Health Profile</span>
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        setShowMobileActions(false);
-                        setShowResources(true);
-                      }}
-                      className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                    >
-                      <BookOpen className="w-4 h-4 text-teal-700 dark:text-teal-400" />
-                      <span>Medical Library</span>
-                    </button>
+
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                    {/* Export Encounter */}
                     {currentMessages.length > 0 && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setShowMobileActions(false);
-                            downloadTranscript();
-                          }}
-                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-                        >
-                          <Download className="w-4 h-4 text-teal-700 dark:text-teal-400" />
-                          <span>Export Encounter</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowMobileActions(false);
-                            clearCurrentChat();
-                          }}
-                          className="w-full px-3.5 py-2.5 text-left flex items-center gap-2.5 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-700 dark:text-red-400"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                          <span>Clear Chat Messages</span>
-                        </button>
-                      </>
+                      <button
+                        onClick={() => {
+                          setShowToolsMenu(false);
+                          downloadTranscript();
+                        }}
+                        className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                      >
+                        <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                        <span>Export Encounter</span>
+                      </button>
+                    )}
+
+                    {/* Clear Conversation */}
+                    {currentMessages.length > 0 && (
+                      <button
+                        onClick={() => {
+                          setShowToolsMenu(false);
+                          clearCurrentChat();
+                        }}
+                        className="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Clear Consultation</span>
+                      </button>
                     )}
                   </div>
                 </>
               )}
             </div>
-
-            {/* Telehealth Audio Station Toggle */}
-            <button
-              onClick={() => setShowVoiceCompanion(prev => !prev)}
-              className={`p-1.5 xs:px-2.5 sm:px-3 sm:py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs shrink-0 ${
-                showVoiceCompanion
-                  ? 'bg-teal-700 border-teal-700 text-white'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
-              }`}
-              title={showVoiceCompanion ? "Hide Telehealth Audio Panel" : "Open Telehealth Audio Exam Station"}
-            >
-              <Radio className={`w-3.5 h-3.5 ${showVoiceCompanion ? 'animate-pulse' : ''}`} />
-              <span className="hidden sm:inline">Audio Exam</span>
-              <span className={`w-1.5 h-1.5 rounded-full ${showVoiceCompanion ? 'bg-emerald-300' : 'bg-slate-400 dark:bg-slate-500'}`} />
-            </button>
           </div>
         </header>
 
-        {/* Clinical Telemetry & Triage Banner */}
-        <ClinicalPatientBanner
-          vitals={vitals}
-          onUpdateVitals={setVitals}
-          acuity={acuity}
-          onUpdateAcuity={setAcuity}
-          patientProfile={userData?.healthProfile}
-          user={user}
-          onOpenProfile={() => setShowProfileModal(true)}
-          onInjectVitals={handleInjectTextToInput}
-        />
+        {/* Optional Clinical Telemetry & Triage Banner */}
+        {showPatientBanner && (
+          <ClinicalPatientBanner
+            vitals={vitals}
+            onUpdateVitals={setVitals}
+            acuity={acuity}
+            onUpdateAcuity={setAcuity}
+            patientProfile={userData?.healthProfile}
+            user={user}
+            onOpenProfile={() => setShowProfileModal(true)}
+            onInjectVitals={handleInjectTextToInput}
+            onClose={() => setShowPatientBanner(false)}
+          />
+        )}
 
         {/* Main Chat Stream Area */}
         <main className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-4 sm:space-y-5">
           <div className="max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto space-y-4 sm:space-y-5 pb-32 sm:pb-36">
-            {/* Clinical Safety Protocol Notice */}
-            <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center shrink-0 mt-0.5">
-                <Info className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+            {/* Optional Dismissible Safety Notice */}
+            {showSafetyNotice && (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs shadow-xs">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <Info className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400 shrink-0" />
+                  <span className="text-[11px]">RapidAid clinical decision support. In acute life-threatening emergencies, call 911 immediately.</span>
+                </div>
+                <button onClick={() => setShowSafetyNotice(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <div className="text-xs">
-                <span className="font-bold text-slate-900 dark:text-slate-100 block">Clinical Triage Protocol & Decision Support</span>
-                <span className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium text-[11px]">
-                  RapidAid applies institutional clinical assessment algorithms. For life-threatening emergencies (acute anaphylaxis, severe cardiac chest pain, stroke symptoms), invoke immediate emergency dispatch (911).
-                </span>
-              </div>
-            </div>
+            )}
 
             {/* Active Medication Scheduled Dose Alert */}
             {activeReminders.length > 0 && (
@@ -1002,80 +1009,31 @@ export default function App() {
               </motion.div>
             )}
 
-            {/* Empty State / Suggested Medical Intake Scenarios */}
+            {/* Empty State / Minimal Intake Scenarios */}
             {currentMessages.length === 0 && (
-              <div className="py-6 text-center space-y-6">
-                <div className="relative inline-block">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-center mx-auto shadow-xs">
-                    <Stethoscope className="w-7 h-7 text-teal-800 dark:text-teal-300" />
-                  </div>
+              <div className="py-12 sm:py-20 text-center max-w-lg mx-auto space-y-5">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-center mx-auto text-teal-800 dark:text-teal-300 shadow-xs">
+                  <Stethoscope className="w-6 h-6" />
                 </div>
-                <div className="space-y-1.5 max-w-lg mx-auto">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-[10px] font-mono font-bold uppercase tracking-wider">
-                    <span>Dept. of Emergency & Ambulatory Triage</span>
-                    <span>•</span>
-                    <span>Station 04</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Clinical Decision Support Station</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                    Submit patient symptoms, vital signs, or pharmacology questions to initiate an evidence-based clinical evaluation, or select a rapid clinical tool below.
+                <div className="space-y-1.5">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    RapidAid Clinical Triage
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-sm mx-auto">
+                    Enter patient symptoms, vital signs, or pharmacology inquiries to begin evaluation.
                   </p>
                 </div>
 
-                {/* Quick Bedside Actions */}
-                <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
-                  <button
-                    onClick={() => setShowCdsModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <Activity className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-                    <span>qSOFA Sepsis Screen</span>
-                  </button>
-                  <button
-                    onClick={() => setShowCdsModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                    <span>Red Flag Checklist</span>
-                  </button>
-                  <button
-                    onClick={() => setShowSoapModal(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-                    <span>Open Blank SOAP Note</span>
-                  </button>
-                  <button
-                    onClick={() => setShowMedications(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <Pill className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-                    <span>eMAR Medications</span>
-                  </button>
-                </div>
-
-                {/* Suggested Intake Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto pt-1">
-                  {SUGGESTED_PROMPTS.map((item, index) => (
+                {/* Minimalist Starter Chips */}
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  {SUGGESTED_PROMPTS.slice(0, 3).map((item, index) => (
                     <button
                       key={index}
                       onClick={() => handleSendText(undefined, item.prompt)}
-                      className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-400 hover:shadow-xs transition-all group flex flex-col justify-between text-left"
+                      className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-400 text-slate-700 dark:text-slate-300 text-xs font-medium hover:text-teal-700 dark:hover:text-teal-300 transition-colors shadow-xs flex items-center gap-1.5 text-left"
                     >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-base">{item.icon}</span>
-                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
-                            {item.title}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">
-                          "{item.prompt}"
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider mt-3 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        Initiate Assessment &rarr;
-                      </span>
+                      <span>{item.icon}</span>
+                      <span>{item.title}</span>
                     </button>
                   ))}
                 </div>
@@ -1346,11 +1304,9 @@ export default function App() {
                 </button>
               )}
             </form>
-            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 px-1 font-mono">
-              <span className="truncate">RapidAid Clinical Intelligence</span>
-              <span className="hidden sm:inline">CONFIDENTIAL • HIPAA PROTOCOL</span>
-              <span className="sm:hidden">CONFIDENTIAL</span>
-            </div>
+            <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
+              RapidAid Clinical Decision Support • Confidential & Secure
+            </p>
           </div>
         </div>
       </div>

@@ -13,7 +13,8 @@ import {
   FilePlus2,
   ShieldCheck,
   User,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { VitalSigns, AcuityLevel, HealthProfile } from '../types';
 
@@ -26,6 +27,7 @@ interface ClinicalPatientBannerProps {
   user?: any;
   onOpenProfile: () => void;
   onInjectVitals: (vitalsSummary: string) => void;
+  onClose?: () => void;
 }
 
 export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
@@ -36,9 +38,10 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
   patientProfile,
   user,
   onOpenProfile,
-  onInjectVitals
+  onInjectVitals,
+  onClose
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [showVitalsModal, setShowVitalsModal] = useState(false);
 
   // Vitals edit form state
@@ -136,6 +139,17 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
               </span>
             )}
           </div>
+
+          {/* Compact Vitals Indicator when Collapsed */}
+          {isCollapsed && (
+            <div className="hidden sm:flex items-center gap-2 font-mono text-[10px] text-slate-500 dark:text-slate-400 bg-white/70 dark:bg-slate-900/70 px-2 py-0.5 rounded border border-slate-200/70 dark:border-slate-800">
+              <span>HR <strong className="text-slate-700 dark:text-slate-200 font-bold">{vitals.heartRate}</strong></span>
+              <span>•</span>
+              <span>BP <strong className="text-slate-700 dark:text-slate-200 font-bold">{vitals.bloodPressureSystolic}/{vitals.bloodPressureDiastolic}</strong></span>
+              <span>•</span>
+              <span>SpO₂ <strong className="text-slate-700 dark:text-slate-200 font-bold">{vitals.oxygenSaturation}%</strong></span>
+            </div>
+          )}
         </div>
 
         {/* Right Station Controls: Acuity Badge, Time & Vitals Editor */}
@@ -180,6 +194,16 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
           >
             {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
           </button>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors ml-0.5"
+              title="Hide Patient Telemetry Banner"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
