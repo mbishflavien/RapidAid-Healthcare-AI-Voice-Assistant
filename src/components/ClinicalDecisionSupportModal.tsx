@@ -121,32 +121,35 @@ export const ClinicalDecisionSupportModal: React.FC<ClinicalDecisionSupportModal
         <div className="flex border-b border-slate-200 bg-slate-100/70 p-1 gap-1">
           <button
             onClick={() => setActiveTab('qsofa')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all text-center ${
               activeTab === 'qsofa' ? 'bg-white text-teal-900 shadow-xs' : 'text-slate-600 hover:bg-white/60'
             }`}
           >
-            qSOFA Sepsis
+            <span className="sm:hidden">qSOFA</span>
+            <span className="hidden sm:inline">qSOFA Sepsis</span>
           </button>
           <button
             onClick={() => setActiveTab('redflags')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all text-center ${
               activeTab === 'redflags' ? 'bg-white text-teal-900 shadow-xs' : 'text-slate-600 hover:bg-white/60'
             }`}
           >
-            Red Flag Checklist ({activeRedFlagsCount})
+            <span className="sm:hidden">Red Flags ({activeRedFlagsCount})</span>
+            <span className="hidden sm:inline">Red Flag Checklist ({activeRedFlagsCount})</span>
           </button>
           <button
             onClick={() => setActiveTab('gcs')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all ${
+            className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all text-center ${
               activeTab === 'gcs' ? 'bg-white text-teal-900 shadow-xs' : 'text-slate-600 hover:bg-white/60'
             }`}
           >
-            Glasgow Coma Scale ({gcsTotal}/15)
+            <span className="sm:hidden">GCS ({gcsTotal})</span>
+            <span className="hidden sm:inline">Glasgow Coma ({gcsTotal}/15)</span>
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
           {/* qSOFA Tool */}
           {activeTab === 'qsofa' && (
             <div className="space-y-4">

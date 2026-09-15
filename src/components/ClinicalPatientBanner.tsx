@@ -97,66 +97,65 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
   return (
     <div className="bg-white border-b border-slate-200 text-slate-900 text-xs shadow-xs relative z-15 select-none">
       {/* Top Telemetry Strip: Hospital Ward, Patient Demographics & Acuity */}
-      <div className="px-4 sm:px-6 py-2 bg-slate-100/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-y-2">
+      <div className="px-3 sm:px-6 py-1.5 sm:py-2 bg-slate-100/90 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-4 gap-y-1.5">
         {/* Patient Demographic Identity */}
-        <div className="flex items-center flex-wrap gap-2.5 sm:gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-slate-900 uppercase tracking-tight text-xs">
+        <div className="flex items-center flex-wrap gap-1.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <span className="font-bold text-slate-900 uppercase tracking-tight text-[11px] sm:text-xs truncate max-w-[120px] xs:max-w-[160px] sm:max-w-none">
                 {patientName}
               </span>
-              <span className="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-semibold">
-                MRN #842-198
+              <span className="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-mono text-[9px] sm:text-[10px] font-semibold shrink-0">
+                #842-198
               </span>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+          <div className="hidden xs:flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium">
             <span>{patientAge}</span>
             <span>•</span>
             <span className="capitalize">{patientGender}</span>
-            <span>•</span>
-            <span className="font-mono text-slate-700">ABO: {bloodType}</span>
-            <span>•</span>
-            <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-mono text-[9px] font-bold">
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline font-mono text-slate-700">{bloodType}</span>
+            <span className="hidden md:inline-flex px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-mono text-[9px] font-bold">
               FULL CODE
             </span>
           </div>
 
           {/* Critical Allergy Pill */}
-          <div className="flex items-center">
+          <div className="flex items-center max-w-[160px] sm:max-w-xs">
             {allergiesText.toLowerCase().includes('nkda') || allergiesText.toLowerCase().includes('none') ? (
-              <span className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 font-mono text-[10px] font-semibold border border-slate-300">
-                ALLERGIES: NKDA
+              <span className="px-1.5 sm:px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 font-mono text-[9px] sm:text-[10px] font-semibold border border-slate-300 truncate">
+                NKDA
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 font-mono text-[10px] font-bold border border-red-300 flex items-center gap-1 animate-pulse">
-                <AlertTriangle className="w-3 h-3 text-red-700" />
-                <span>ALLERGIES: {allergiesText}</span>
+              <span className="px-1.5 sm:px-2 py-0.5 rounded bg-red-100 text-red-800 font-mono text-[9px] sm:text-[10px] font-bold border border-red-300 flex items-center gap-1 animate-pulse truncate" title={allergiesText}>
+                <AlertTriangle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-700 shrink-0" />
+                <span className="truncate">ALLERGY: {allergiesText}</span>
               </span>
             )}
           </div>
         </div>
 
         {/* Right Station Controls: Acuity Badge, Time & Vitals Editor */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
           {/* Acuity (ESI) Dropdown */}
           <div className="flex items-center gap-1">
-            <label className="text-[10px] uppercase font-mono font-bold text-slate-500 hidden md:inline">
+            <label className="text-[9px] sm:text-[10px] uppercase font-mono font-bold text-slate-500 hidden lg:inline">
               ACUITY:
             </label>
             <select
               value={acuity}
               onChange={(e) => onUpdateAcuity(e.target.value as AcuityLevel)}
-              className={`px-2 py-0.8 rounded text-[10px] font-mono font-bold uppercase tracking-wider border cursor-pointer ${getAcuityColor(acuity)}`}
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-0.8 rounded text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider border cursor-pointer max-w-[130px] sm:max-w-none ${getAcuityColor(acuity)}`}
               title="Emergency Severity Index Triage Level"
             >
-              <option value="ESI-1">ESI-1: Resuscitation (Immediate)</option>
-              <option value="ESI-2">ESI-2: Emergent (&lt;15m)</option>
-              <option value="ESI-3">ESI-3: Urgent (&lt;30m)</option>
-              <option value="ESI-4">ESI-4: Less Urgent (&lt;60m)</option>
-              <option value="ESI-5">ESI-5: Non-Urgent (&lt;120m)</option>
+              <option value="ESI-1">ESI-1 (Immediate)</option>
+              <option value="ESI-2">ESI-2 (Emergent)</option>
+              <option value="ESI-3">ESI-3 (Urgent)</option>
+              <option value="ESI-4">ESI-4 (Less Urgent)</option>
+              <option value="ESI-5">ESI-5 (Non-Urgent)</option>
             </select>
           </div>
 
@@ -166,7 +165,7 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
               setTempVitals(vitals);
               setShowVitalsModal(true);
             }}
-            className="px-2 py-1 rounded bg-white hover:bg-teal-50 border border-slate-300 text-slate-700 hover:text-teal-800 text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-xs"
+            className="px-2 py-1 rounded bg-white hover:bg-teal-50 border border-slate-300 text-slate-700 hover:text-teal-800 text-[10px] sm:text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-xs"
             title="Log / Update Patient Vital Signs"
           >
             <Edit3 className="w-3 h-3 text-teal-700" />
@@ -184,149 +183,150 @@ export const ClinicalPatientBanner: React.FC<ClinicalPatientBannerProps> = ({
         </div>
       </div>
 
-      {/* Triage Vital Signs Telemetry Strip */}
+      {/* Triage Vital Signs Telemetry Strip - All 6 Vitals Accessible on All Dimensions */}
       {!isCollapsed && (
-        <div className="px-4 sm:px-6 py-2.5 bg-white flex flex-wrap items-center justify-between gap-3 overflow-x-auto">
-          <div className="flex items-center gap-3 sm:gap-6 text-xs flex-nowrap">
+        <div className="px-3 sm:px-6 py-2 bg-white flex items-center justify-between gap-2 sm:gap-4 overflow-x-auto custom-scrollbar">
+          <div className="flex items-center gap-2.5 sm:gap-5 text-xs shrink-0">
             {/* Heart Rate (Pulse) */}
-            <div className="flex items-center gap-2">
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0 ${
                 isTachycardic || isBradycardic ? 'bg-amber-100 text-amber-800' : 'bg-rose-50 text-rose-700'
               }`}>
-                <Heart className={`w-3.5 h-3.5 ${isTachycardic ? 'animate-ping' : ''}`} />
+                <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isTachycardic ? 'animate-ping' : ''}`} />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
-                  HR (PULSE)
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                  HR
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className={`text-sm font-mono font-bold ${
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className={`text-xs sm:text-sm font-mono font-bold ${
                     isTachycardic || isBradycardic ? 'text-amber-700' : 'text-slate-900'
                   }`}>
                     {vitals.heartRate}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">bpm</span>
+                  <span className="text-[9px] text-slate-400 font-mono">bpm</span>
                 </div>
               </div>
             </div>
 
             {/* Blood Pressure (NIBP) */}
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 sm:pl-5">
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
+            <div className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 shrink-0">
+              <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0 ${
                 isHypertensive ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700'
               }`}>
-                <Gauge className="w-3.5 h-3.5" />
+                <Gauge className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
-                  BP (NIBP)
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                  BP
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className={`text-sm font-mono font-bold ${
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className={`text-xs sm:text-sm font-mono font-bold ${
                     isHypertensive ? 'text-amber-700' : 'text-slate-900'
                   }`}>
                     {vitals.bloodPressureSystolic}/{vitals.bloodPressureDiastolic}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">mmHg</span>
+                  <span className="text-[9px] text-slate-400 font-mono">mmHg</span>
                 </div>
               </div>
             </div>
 
             {/* SpO2 Oxygen Saturation */}
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 sm:pl-5">
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
+            <div className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 shrink-0">
+              <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0 ${
                 isHypoxic ? 'bg-red-100 text-red-800' : 'bg-teal-50 text-teal-800'
               }`}>
-                <Activity className="w-3.5 h-3.5" />
+                <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
                   SpO₂
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className={`text-sm font-mono font-bold ${
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className={`text-xs sm:text-sm font-mono font-bold ${
                     isHypoxic ? 'text-red-700 font-black' : 'text-slate-900'
                   }`}>
                     {vitals.oxygenSaturation}%
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">RA</span>
+                  <span className="text-[9px] text-slate-400 font-mono">RA</span>
                 </div>
               </div>
             </div>
 
             {/* Temperature */}
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 sm:pl-5">
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
+            <div className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 shrink-0">
+              <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0 ${
                 isFebrile ? 'bg-red-100 text-red-800' : isHypothermic ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'
               }`}>
-                <Thermometer className="w-3.5 h-3.5" />
+                <Thermometer className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
-                  TEMP (ORAL)
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                  TEMP
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className={`text-sm font-mono font-bold ${
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className={`text-xs sm:text-sm font-mono font-bold ${
                     isFebrile ? 'text-red-700' : 'text-slate-900'
                   }`}>
                     {vitals.temperature}°F
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="hidden md:inline text-[9px] text-slate-400 font-mono">
                     ({((vitals.temperature - 32) * 5 / 9).toFixed(1)}°C)
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Respiratory Rate */}
-            <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-3 sm:pl-5">
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
+            {/* Respiratory Rate - visible on all device widths */}
+            <div className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 shrink-0">
+              <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center shrink-0 ${
                 isTachypneic ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
               }`}>
-                <Wind className="w-3.5 h-3.5" />
+                <Wind className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
-                  RESP RATE
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                  RESP
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className={`text-sm font-mono font-bold ${
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className={`text-xs sm:text-sm font-mono font-bold ${
                     isTachypneic ? 'text-amber-700' : 'text-slate-900'
                   }`}>
                     {vitals.respiratoryRate}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">/min</span>
+                  <span className="text-[9px] text-slate-400 font-mono">/min</span>
                 </div>
               </div>
             </div>
 
-            {/* Pain Scale */}
-            <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-3 sm:pl-5">
+            {/* Pain Scale - visible on all device widths */}
+            <div className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 shrink-0">
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block leading-none">
-                  PAIN (0-10)
+                <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block leading-none">
+                  PAIN
                 </span>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className="text-sm font-mono font-bold text-slate-900">
+                <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5">
+                  <span className="text-xs sm:text-sm font-mono font-bold text-slate-900">
                     {vitals.painLevel}/10
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {vitals.painLevel === 0 ? 'None' : vitals.painLevel <= 3 ? 'Mild' : vitals.painLevel <= 6 ? 'Mod' : 'Severe'}
+                  <span className="hidden sm:inline text-[9px] text-slate-400 font-mono">
+                    ({vitals.painLevel === 0 ? 'None' : vitals.painLevel <= 3 ? 'Mild' : vitals.painLevel <= 6 ? 'Mod' : 'Severe'})
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Action to send vitals to chat */}
-          <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* Quick Action to attach vitals to consultation message */}
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0 pl-2">
             <button
               onClick={handleInjectVitalsSummary}
-              className="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-mono font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-2 sm:px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[10px] sm:text-[11px] font-mono font-semibold flex items-center gap-1 transition-colors shadow-xs shrink-0"
               title="Add current vitals into clinical intake message"
             >
               <FilePlus2 className="w-3 h-3 text-teal-700" />
-              <span>Attach Vitals to Note</span>
+              <span className="hidden sm:inline">Attach Vitals to Note</span>
+              <span className="sm:hidden">Attach Vitals</span>
             </button>
           </div>
         </div>

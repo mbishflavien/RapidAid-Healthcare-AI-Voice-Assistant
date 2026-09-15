@@ -591,45 +591,54 @@ SAFETY RULES:
   if (!isOpen) return null;
 
   return (
-    <div className="w-full lg:w-96 border-l border-slate-200 bg-white flex flex-col h-full shrink-0 z-30 shadow-xl lg:shadow-none">
-      {/* Telehealth Audio Station Header */}
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90">
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-            isActive ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-200 text-slate-600'
-          }`}>
-            <Radio className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-900 tracking-tight">Telehealth Audio Station</h3>
-              <span className={`w-2 h-2 rounded-full ${
-                isActive ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-300'
-              }`} />
-            </div>
-            <p className="text-[10px] text-slate-500 font-mono font-medium">
-              {status === 'active' ? 'FULL-DUPLEX 16kHz • LIVE' : status === 'connecting' ? 'CONNECTING PROTOCOL...' : 'STANDBY • READY'}
-            </p>
-          </div>
-        </div>
+    <>
+      {/* Mobile/Tablet Backdrop Overlay */}
+      <div 
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+        onClick={onClose}
+        aria-label="Close voice companion"
+      />
 
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setShowVoicePicker(!showVoicePicker)}
-            className="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-xs"
-            title="Select Clinical Voice Persona"
-          >
-            <span>{selectedVoice}</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
-            title="Collapse Audio Panel"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 max-w-full lg:static lg:w-80 xl:w-96 border-l border-slate-200 bg-white flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none animate-in slide-in-from-right duration-200">
+        {/* Telehealth Audio Station Header */}
+        <div className="p-3.5 sm:p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/90">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+              isActive ? 'bg-teal-700 text-white shadow-xs' : 'bg-slate-200 text-slate-600'
+            }`}>
+              <Radio className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h3 className="text-xs font-bold text-slate-900 tracking-tight truncate">Telehealth Audio Station</h3>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  isActive ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-300'
+                }`} />
+              </div>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-mono font-medium truncate">
+                {status === 'active' ? 'FULL-DUPLEX 16kHz • LIVE' : status === 'connecting' ? 'CONNECTING...' : 'STANDBY • READY'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            <button
+              onClick={() => setShowVoicePicker(!showVoicePicker)}
+              className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-xs"
+              title="Select Clinical Voice Persona"
+            >
+              <span>{selectedVoice}</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+              title="Close Audio Panel"
+            >
+              <X className="w-4 h-4 lg:hidden" />
+              <ChevronRight className="w-4 h-4 hidden lg:block" />
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Voice Persona Dropdown */}
       <AnimatePresence>
@@ -677,10 +686,10 @@ SAFETY RULES:
       </AnimatePresence>
 
       {/* Audio Visualizer / Monitor */}
-      <div className="p-5 flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
-        <div className="space-y-4">
+      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+        <div className="space-y-3 sm:space-y-4">
           {/* Main Visualizer Stage (Oscilloscope & Vitals Style) */}
-          <div className="relative p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center min-h-[220px] text-center overflow-hidden medical-ecg-bg">
+          <div className="relative p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center min-h-[170px] sm:min-h-[210px] text-center overflow-hidden medical-ecg-bg">
             {/* Top Telemetry Overlay */}
             <div className="absolute top-2.5 inset-x-3 flex items-center justify-between text-[10px] font-mono text-slate-400">
               <span className="flex items-center gap-1.5">
@@ -917,5 +926,6 @@ SAFETY RULES:
         </div>
       </div>
     </div>
+  </>
   );
 };

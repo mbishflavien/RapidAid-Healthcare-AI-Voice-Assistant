@@ -120,41 +120,43 @@ CODE STATUS: FULL CODE | ACUITY: ${acuity}
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-950/60 backdrop-blur-xs">
       <div className="w-full max-w-3xl bg-white rounded-2xl border border-slate-300 shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Institutional Letterhead Top Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-800 flex items-center justify-center text-white shadow-xs">
-              <Stethoscope className="w-5 h-5" />
+        <div className="p-3.5 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-teal-800 flex items-center justify-center text-white shadow-xs shrink-0">
+              <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight font-mono">
-                  CLINICAL PROGRESS NOTE (SOAP)
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight font-mono truncate">
+                  <span className="hidden sm:inline">CLINICAL PROGRESS NOTE (SOAP)</span>
+                  <span className="sm:hidden">SOAP NOTE</span>
                 </h2>
-                <span className="px-2 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-mono font-bold">
+                <span className="px-1.5 sm:px-2 py-0.2 sm:py-0.5 rounded bg-teal-100 text-teal-800 text-[9px] sm:text-[10px] font-mono font-bold shrink-0">
                   HL7-EHR
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Official Clinical Decision Support Record • Dept. of Ambulatory Medicine
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate">
+                Clinical Decision Support Record • Dept. of Ambulatory Medicine
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={handleCopy}
-              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
               title="Copy formatted clinical text to clipboard"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied' : 'Copy SOAP'}</span>
+              <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy SOAP'}</span>
+              <span className="sm:hidden">{copied ? 'Copied' : 'Copy'}</span>
             </button>
             <button
               onClick={handlePrint}
-              className="p-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs transition-colors shadow-xs hidden sm:flex items-center"
+              className="p-1.5 sm:p-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs transition-colors shadow-xs hidden sm:flex items-center"
               title="Print Clinical Note"
             >
               <Printer className="w-4 h-4" />
