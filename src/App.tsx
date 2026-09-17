@@ -438,6 +438,8 @@ export default function App() {
     try {
       let currentAccumulated = "";
       let capturedAnalysis: SymptomAnalysis | undefined;
+      let renderRaf: number | null = null;
+      let lastRenderTime = 0;
 
       const result = await streamClinicalChat({
         userMessage: query,
@@ -449,14 +451,35 @@ export default function App() {
         signal: controller.signal,
         onChunk: (chunkText) => {
           currentAccumulated = chunkText;
-          setMessages(prev => prev.map(m => 
-            m.id === assistantMessageId ? { ...m, text: chunkText } : m
-          ));
+          const now = performance.now();
+          // First token renders instantaneously; subsequent chunks throttled to ~30ms for smooth 60fps streaming
+          if (now - lastRenderTime > 30 || !lastRenderTime) {
+            lastRenderTime = now;
+            if (renderRaf) {
+              cancelAnimationFrame(renderRaf);
+              renderRaf = null;
+            }
+            setMessages(prev => prev.map(m => 
+              m.id === assistantMessageId ? { ...m, text: chunkText } : m
+            ));
+          } else if (!renderRaf) {
+            renderRaf = requestAnimationFrame(() => {
+              renderRaf = null;
+              lastRenderTime = performance.now();
+              setMessages(prev => prev.map(m => 
+                m.id === assistantMessageId ? { ...m, text: currentAccumulated } : m
+              ));
+            });
+          }
         },
         onAnalysis: (analysis) => {
           capturedAnalysis = analysis;
         }
       });
+
+      if (renderRaf) {
+        cancelAnimationFrame(renderRaf);
+      }
 
       const finalAssistantMessage: Transcription = {
         id: assistantMessageId,

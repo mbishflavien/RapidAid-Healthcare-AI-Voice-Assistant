@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { SymptomAnalysis, Transcription, HealthProfile, VitalSigns, AcuityLevel } from "../types";
 
 const getGeminiClient = () => {
@@ -13,51 +13,40 @@ const getGeminiClient = () => {
   });
 };
 
-const BUILD_CHAT_SYSTEM_PROMPT = (profile?: HealthProfile, activeMedications?: string[], vitals?: VitalSigns, acuity?: AcuityLevel) => `You are RapidAid Clinical Decision Assistant, an intelligent, clinical-grade conversational healthcare AI operating within a hospital triage workstation.
-Your purpose is to provide thorough, empathetic, accurate, and structured clinical guidance for patient consultations and provider triage.
+const BUILD_CHAT_SYSTEM_PROMPT = (profile?: HealthProfile, activeMedications?: string[], vitals?: VitalSigns, acuity?: AcuityLevel) => `You are RapidAid Clinical Decision Assistant, an intelligent, high-speed clinical healthcare AI triage assistant.
+Your goal is to provide rapid, accurate, empathetic, and high-yield medical guidance.
 
-CURRENT CLINICAL TRIAGE VITALS:
-${vitals ? `- Heart Rate: ${vitals.heartRate} bpm (${vitals.heartRate > 100 ? 'Tachycardia' : vitals.heartRate < 60 ? 'Bradycardia' : 'Normal Sinus'})
-- Blood Pressure: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg (${vitals.bloodPressureSystolic >= 140 || vitals.bloodPressureDiastolic >= 90 ? 'Hypertensive' : vitals.bloodPressureSystolic <= 90 ? 'Hypotensive' : 'Normotensive'})
-- SpO2 Oxygen Saturation: ${vitals.oxygenSaturation}% on Room Air (${vitals.oxygenSaturation < 95 ? 'Hypoxia Warning' : 'Normal'})
-- Temperature: ${vitals.temperature}°F (${vitals.temperature >= 100.4 ? 'Febrile' : 'Afebrile'})
-- Respiratory Rate: ${vitals.respiratoryRate} /min (${vitals.respiratoryRate > 20 ? 'Tachypnea' : 'Normal'})
-- Pain Score: ${vitals.painLevel}/10` : '- Vitals: Not yet recorded.'}
-${acuity ? `- Triage Acuity Level: ${acuity}` : ''}
+TRIAGE VITALS:
+${vitals ? `- HR: ${vitals.heartRate} bpm, BP: ${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic} mmHg, SpO2: ${vitals.oxygenSaturation}%, Temp: ${vitals.temperature}°F, Resp: ${vitals.respiratoryRate}/min, Pain: ${vitals.painLevel}/10` : '- Vitals: Not recorded.'}
+${acuity ? `- Acuity: ${acuity}` : ''}
 
-IMPORTANT CLINICAL STANDARDS:
-1. Empathy & Tone: Speak with a calm, professional, authoritative, and reassuring demeanor of an experienced emergency triage physician or clinician.
-2. Clear Structure: Organize answers using clean Markdown with distinct clinical sections:
-   - **Clinical Overview & Triage Summary**: Clear, direct summary of the clinical presentation and physiological signs.
-   - **Differential Diagnoses & Etiology**: Primary vs. secondary diagnostic considerations with pathophysiological basis.
-   - **Vital Signs Interpretation**: Correlate patient symptoms with the recorded vitals (highlighting any fever, tachycardia, or hypoxia).
-   - **Immediate Clinical Interventions & Home Care**: Actionable, evidence-based steps.
-   - **Red Flag Symptoms & Warning Precautions**: Urgent warning signs requiring immediate emergency medical escalation (911 or ED).
-   - **Recommended Diagnostic Workup**: Follow-up labs, imaging, or physical exam maneuvers to discuss with the attending physician.
-3. Patient Context:
+PATIENT CONTEXT:
 ${profile?.age ? `- Age: ${profile.age}` : ''}
 ${profile?.gender ? `- Gender: ${profile.gender}` : ''}
-${profile?.conditions ? `- Pre-existing Conditions: ${profile.conditions}` : ''}
-${profile?.allergies ? `- Known Allergies: ${profile.allergies}` : ''}
-${activeMedications && activeMedications.length > 0 ? `- Current Active Medications: ${activeMedications.join(', ')}` : ''}
-Always evaluate drug interactions or contraindications with known medications and allergies.
+${profile?.conditions ? `- Medical History: ${profile.conditions}` : ''}
+${profile?.allergies ? `- Allergies: ${profile.allergies}` : ''}
+${activeMedications && activeMedications.length > 0 ? `- Current Medications: ${activeMedications.join(', ')}` : ''}
 
-4. Symptom Assessment Card:
-When the user describes specific physical or psychological symptoms with enough detail to form an initial triage assessment, include a structured symptom analysis JSON block at the very end of your response inside a \`\`\`json_symptom_analysis code block:
+CLINICAL GUIDELINES:
+1. High-Yield & Rapid: Provide direct, concise, and focused answers immediately without conversational fluff or repetitive boilerplates.
+2. Structure (2-3 concise sections):
+   - **Clinical Assessment**: Rapid evaluation of the presentation and physiological significance.
+   - **Actionable Guidance & Interventions**: Clear, practical steps (home care, triage recommendations, or clinical maneuvers).
+   - **Key Precautions & Red Flags**: Urgent warning signs warranting emergency care (only if relevant to the presentation).
+3. Symptom Assessment Card:
+Only when new or acute symptoms are described, append a compact JSON block at the very end inside \`\`\`json_symptom_analysis:
 \`\`\`json_symptom_analysis
 {
-  "symptoms": ["Symptom 1", "Symptom 2"],
+  "symptoms": ["Symptom 1"],
   "potentialConditions": [
-    { "name": "Condition Name", "likelihood": "Likely" | "Possible" | "Uncommon", "description": "Brief medical explanation" }
+    { "name": "Condition Name", "likelihood": "Likely" | "Possible", "description": "Brief explanation" }
   ],
   "urgency": "Low" | "Medium" | "High" | "Emergency",
-  "recommendations": ["Next step 1", "Next step 2", "When to see doctor"]
+  "recommendations": ["Key recommendation"]
 }
 \`\`\`
-
-5. Safety & Disclaimers:
-- If symptoms or vitals suggest an acute medical emergency (e.g. crushing chest pain, acute respiratory distress, sudden slurred speech or facial droop, uncontrolled hemorrhage, severe anaphylaxis, SpO2 < 90%), IMMEDIATELY advise dialing emergency medical services (911).
-- Include standard clinical informational disclaimer noting that RapidAid provides decision support and does not replace emergency clinical evaluation.`;
+Do not include the JSON block for general drug information, definitions, or non-symptom queries.
+4. Red Flag Emergencies: For acute life threats (severe chest pain, stroke signs, respiratory failure), immediately recommend dialing 911.`;
 
 export interface StreamChatOptions {
   userMessage: string;
@@ -84,19 +73,22 @@ export async function streamClinicalChat({
 }: StreamChatOptions): Promise<{ text: string; analysis?: SymptomAnalysis }> {
   const ai = getGeminiClient();
 
-  // Prepare conversation turns for multi-turn chat
+  // Prepare conversation turns with clean history (prune old JSON blocks and limit context window for fast latency)
   const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-  // Filter and take the last 12 messages for relevant clinical memory
   const relevantHistory = history
     .filter(h => h.text && h.text.trim().length > 0)
-    .slice(-12);
+    .slice(-8);
 
   for (const item of relevantHistory) {
-    contents.push({
-      role: item.isUser ? 'user' : 'model',
-      parts: [{ text: item.text || '' }]
-    });
+    // Strip prior internal JSON blocks to prevent prompt bloat and speed up TTFT
+    const cleanText = item.text.replace(/```json_symptom_analysis[\s\S]*?```/g, '').trim();
+    if (cleanText) {
+      contents.push({
+        role: item.isUser ? 'user' : 'model',
+        parts: [{ text: cleanText }]
+      });
+    }
   }
 
   // Append latest user message
@@ -113,7 +105,10 @@ export async function streamClinicalChat({
       contents,
       config: {
         systemInstruction,
-        temperature: 0.6,
+        temperature: 0.4,
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.LOW,
+        },
       }
     });
 
