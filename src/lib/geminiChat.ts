@@ -123,7 +123,7 @@ export async function streamClinicalChat({
         rawAccumulated += text;
         
         // Strip the json_symptom_analysis block for live display so user doesn't see raw JSON during streaming
-        const cleanDisplay = rawAccumulated.replace(/```json_symptom_analysis[\s\S]*?(```|$)/g, '').trim();
+        const cleanDisplay = rawAccumulated.replace(/```json_symptom_analysis[\s\S]*?(```|$)/g, '').trimStart();
         onChunk(cleanDisplay || rawAccumulated);
       }
     }

@@ -70,6 +70,7 @@ import { Transcription, SymptomAnalysis, Session, VitalSigns, AcuityLevel } from
 import { ClinicalPatientBanner } from './components/ClinicalPatientBanner';
 import { SoapNoteModal } from './components/SoapNoteModal';
 import { ClinicalDecisionSupportModal } from './components/ClinicalDecisionSupportModal';
+import { ChatMessageItem } from './components/ChatMessageItem';
 
 const MEDICAL_RESOURCES = [
   {
@@ -201,10 +202,14 @@ export default function App() {
   const activeSession = sessions.find(s => s.id === currentSessionId);
   const currentMessages = messages;
 
-  // Auto-scroll to bottom of conversation
+  // Scroll to bottom only when switching to a consultation session from history
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isGenerating]);
+    if (!currentSessionId || isGeneratingRef.current) return;
+    const timeout = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [currentSessionId]);
 
   // Medication reminders checker
   useEffect(() => {
@@ -349,6 +354,12 @@ export default function App() {
   // Add transcription (from Voice Companion or voice speech)
   const addTranscriptionToRecord = useCallback(async (transcription: Transcription) => {
     setMessages(prev => [...prev, transcription]);
+    setTimeout(() => {
+      const el = document.getElementById(`msg-${transcription.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
 
     if (!user) return;
 
@@ -411,6 +422,14 @@ export default function App() {
 
     // Update UI state for instant response
     setMessages(prev => [...prev, userMessage, initialAssistantMessage]);
+
+    // Position view once at the user query and start of the incoming response
+    setTimeout(() => {
+      const userEl = document.getElementById(`msg-${userMessage.id}`);
+      if (userEl) {
+        userEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
 
     setIsGenerating(true);
     isGeneratingRef.current = true;
@@ -1065,193 +1084,21 @@ export default function App() {
 
             {/* Conversation Messages */}
             {currentMessages.map((msg, idx) => (
-              <motion.div
-                key={msg.id || msg.timestamp + idx}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`relative ${msg.analysis ? 'w-full' : 'max-w-[92%] sm:max-w-[85%] md:max-w-[80%]'}`}>
-                  {msg.isUser ? (
-                    // Patient Message Bubble
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 dark:bg-slate-800 border dark:border-slate-700 text-white shadow-xs">
-                      <div className="flex items-center gap-2 mb-1 text-[10px] text-teal-400 font-mono font-bold uppercase tracking-wider">
-                        <span>Patient Intake</span>
-                        {msg.fromVoice && (
-                          <span className="px-1.5 py-0.2 rounded bg-teal-900/60 text-teal-300 font-semibold">
-                            Telehealth Audio
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap text-slate-100">{msg.text}</p>
-                      <div className="mt-2 flex items-center justify-end text-[10px] font-mono text-slate-400">
-                        <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    // Assistant Clinical Response Card
-                    <div className="space-y-3 w-full">
-                      {/* Structured Clinical Triage Assessment Card if generated */}
-                      {msg.analysis && (
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs mb-3">
-                          {/* Card Header with Clinical Urgency Pill */}
-                          <div className={`px-4 sm:px-5 py-3 sm:py-3.5 flex flex-wrap items-center justify-between gap-2 border-b ${
-                            msg.analysis.urgency === 'Emergency' ? 'bg-red-50/90 dark:bg-red-950/80 border-red-200 dark:border-red-900 text-red-800 dark:text-red-300' :
-                            msg.analysis.urgency === 'High' ? 'bg-amber-50/90 dark:bg-amber-950/80 border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300' :
-                            'bg-teal-50/90 dark:bg-teal-950/80 border-teal-200 dark:border-teal-900 text-teal-900 dark:text-teal-200'
-                          }`}>
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                msg.analysis.urgency === 'Emergency' ? 'bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-300' :
-                                msg.analysis.urgency === 'High' ? 'bg-amber-100 dark:bg-amber-900/80 text-amber-700 dark:text-amber-300' :
-                                'bg-teal-100 dark:bg-teal-900/80 text-teal-800 dark:text-teal-300'
-                              }`}>
-                                <ShieldAlert className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h4 className="text-xs font-bold uppercase tracking-wider">Clinical Triage Assessment</h4>
-                                  <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 dark:bg-slate-800/80 border border-current/20">ICD-TRIAGE</span>
-                                </div>
-                                <p className="text-[11px] font-medium opacity-85">
-                                   Reported: {msg.analysis.symptoms.join(', ')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                              <button
-                                onClick={() => setShowSoapModal(true)}
-                                className="px-2 py-1 rounded bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-mono font-bold flex items-center gap-1 border border-current/20 transition-colors shadow-xs"
-                                title="Open full Encounter SOAP Progress Note"
-                              >
-                                <FileText className="w-3 h-3 text-teal-800 dark:text-teal-400" />
-                                <span>SOAP Note</span>
-                              </button>
-                              <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
-                                msg.analysis.urgency === 'Emergency' ? 'bg-red-700 text-white' :
-                                msg.analysis.urgency === 'High' ? 'bg-amber-700 text-white' :
-                                'bg-teal-800 text-white'
-                              }`}>
-                                {msg.analysis.urgency} Urgency
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Assessment Content */}
-                          <div className="p-3.5 sm:p-5 space-y-4 sm:space-y-5">
-                            {/* Differential Diagnoses / Potential Causes */}
-                            <div>
-                              <div className="flex items-center justify-between mb-2.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                  Differential Diagnoses / Etiology
-                                </p>
-                                <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">CLINICAL LIKELIHOOD</span>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                {msg.analysis.potentialConditions.map((cond, cIdx) => (
-                                  <div key={cIdx} className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{cond.name}</span>
-                                      <span className="text-[9px] font-mono font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/80 border border-teal-200 dark:border-teal-800 px-1.5 py-0.5 rounded">
-                                        {cond.likelihood}
-                                      </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{cond.description}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Recommended Clinical Roadmap */}
-                            <div>
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
-                                Recommended Clinical Action Protocol
-                              </p>
-                              <div className="space-y-1.5">
-                                {msg.analysis.recommendations.map((rec, rIdx) => (
-                                  <div key={rIdx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium p-2 rounded-lg bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400 shrink-0 mt-0.5" />
-                                    <span className="leading-relaxed">{rec}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Main Clinical Note (Markdown Formatted) */}
-                      {msg.text && (
-                        <div className="p-3.5 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-xs relative">
-                          <div className="prose prose-sm prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-slate-100 prose-ul:my-2 prose-li:my-0.5 text-xs sm:text-sm overflow-x-auto">
-                            <Markdown>{msg.text}</Markdown>
-                          </div>
-
-                          {/* Message Footer / Clinical Telemetry */}
-                          <div className="mt-3 sm:mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500">
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded bg-teal-700 text-white flex items-center justify-center text-[9px] font-bold">
-                                +
-                              </div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">RapidAid Clinical AI</span>
-                              {msg.fromVoice && (
-                                <span className="px-1.5 py-0.2 rounded bg-teal-50 dark:bg-teal-950/80 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-[9px] font-mono font-bold">
-                                  VOICE ENCOUNTER
-                                </span>
-                              )}
-                              <span>•</span>
-                              <span className="text-[10px] font-mono">
-                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              {/* Audio Read Aloud */}
-                              <button
-                                onClick={() => speakText(msg.text!, msg.id || `${idx}`)}
-                                className={`p-1.5 rounded-lg transition-colors ${
-                                  speakingMessageId === (msg.id || `${idx}`)
-                                    ? 'bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 font-bold'
-                                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-                                }`}
-                                title={speakingMessageId === (msg.id || `${idx}`) ? "Stop Audio Readout" : "Audio Readout"}
-                              >
-                                {speakingMessageId === (msg.id || `${idx}`) ? (
-                                  <VolumeX className="w-3.5 h-3.5 text-teal-700 dark:text-teal-300 animate-pulse" />
-                                ) : (
-                                  <Volume2 className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-
-                              {/* Copy Clinical Advice */}
-                              <button
-                                onClick={() => copyMessage(msg.text!, msg.id || `${idx}`)}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                                title="Copy Clinical Text"
-                              >
-                                {copiedId === (msg.id || `${idx}`) ? (
-                                  <Check className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+              <ChatMessageItem
+                key={msg.id || `${msg.timestamp}-${idx}`}
+                msg={msg}
+                index={idx}
+                isSpeaking={speakingMessageId === (msg.id || `${idx}`)}
+                isCopied={copiedId === (msg.id || `${idx}`)}
+                onSpeak={speakText}
+                onCopy={copyMessage}
+                onOpenSoap={() => setShowSoapModal(true)}
+              />
             ))}
 
-            {/* Live Generation Typing Pulse */}
-            {isGenerating && (
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-xs shadow-xs"
-              >
+            {/* Live Generation Typing Pulse - displayed only while waiting for initial text to stream */}
+            {isGenerating && (!currentMessages.length || !currentMessages[currentMessages.length - 1]?.text) && (
+              <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-xs shadow-xs">
                 <div className="flex gap-1">
                   <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '0ms' }} />
                   <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -1265,7 +1112,7 @@ export default function App() {
                 >
                   <Square className="w-3.5 h-3.5" />
                 </button>
-              </motion.div>
+              </div>
             )}
 
             {/* Error Banner */}
