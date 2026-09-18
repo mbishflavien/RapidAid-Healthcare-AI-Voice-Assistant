@@ -108,23 +108,23 @@ const MEDICAL_RESOURCES = [
 const SUGGESTED_PROMPTS = [
   {
     icon: "🩺",
-    title: "Acute Symptom Triage",
-    prompt: "Patient presenting with low-grade fever (100.8°F), diffuse myalgias, and dry cough for 48 hours. Please provide clinical triage assessment and red flags."
+    title: "Fever & Body Aches",
+    prompt: "I have had a mild fever (100.8°F), body aches, and a cough for 2 days. Can you explain simply what might be happening and what I can do at home?"
   },
   {
     icon: "💊",
-    title: "Pharmacotherapy Review",
-    prompt: "Review potential contraindications or drug-drug interactions between oral NSAIDs (ibuprofen) and ACE inhibitors (lisinopril)."
+    title: "Medication Interaction",
+    prompt: "Can I safely take ibuprofen (Advil) if I am already taking lisinopril for high blood pressure? Please explain in simple terms."
   },
   {
     icon: "🫀",
-    title: "Cardiovascular vs. Non-Cardiac Triage",
-    prompt: "Provide diagnostic differentiation guidelines between acute musculoskeletal/anxiety-induced precordial chest discomfort and acute coronary syndromes."
+    title: "Chest Tightness & Stress",
+    prompt: "I get tightness in my chest when I feel anxious. How can I tell if it is just stress or something serious, and when should I get emergency help?"
   },
   {
     icon: "🩹",
-    title: "Wound & Burn Care Protocol",
-    prompt: "Outline standard clinical first-line management protocol for a partial-thickness (second-degree) thermal steam burn on the forearm."
+    title: "Burn First Aid",
+    prompt: "I got a small burn from hot steam on my arm while cooking. What simple first-aid steps should I follow right now?"
   }
 ];
 
@@ -1059,10 +1059,10 @@ export default function App() {
                 </div>
                 <div className="space-y-1.5">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                    RapidAid Clinical Triage
+                    RapidAid Health Assistant
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-sm mx-auto">
-                    Enter patient symptoms, vital signs, or pharmacology inquiries to begin evaluation.
+                    Ask any health question, describe symptoms, or check medications for simple, clear guidance.
                   </p>
                 </div>
 

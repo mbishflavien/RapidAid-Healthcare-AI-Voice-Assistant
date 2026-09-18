@@ -77,8 +77,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = React.memo(({
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs font-bold uppercase tracking-wider">Clinical Triage Assessment</h4>
-                        <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 dark:bg-slate-800/80 border border-current/20">ICD-TRIAGE</span>
+                        <h4 className="text-xs font-bold uppercase tracking-wider">Symptom Summary & Care Level</h4>
+                        <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-white/60 dark:bg-slate-800/80 border border-current/20">GUIDANCE</span>
                       </div>
                       <p className="text-[11px] font-medium opacity-85">
                          Reported: {msg.analysis.symptoms.join(', ')}
@@ -89,10 +89,10 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = React.memo(({
                     <button
                       onClick={onOpenSoap}
                       className="px-2 py-1 rounded bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-mono font-bold flex items-center gap-1 border border-current/20 transition-colors shadow-xs"
-                      title="Open full Encounter SOAP Progress Note"
+                      title="Open Encounter Progress Note"
                     >
                       <FileText className="w-3 h-3 text-teal-800 dark:text-teal-400" />
-                      <span>SOAP Note</span>
+                      <span>Clinical Chart</span>
                     </button>
                     <span className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-wider ${
                       msg.analysis.urgency === 'Emergency' ? 'bg-red-700 text-white' :
@@ -110,9 +110,9 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = React.memo(({
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Differential Diagnoses / Etiology
+                        Possible Causes
                       </p>
-                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">CLINICAL LIKELIHOOD</span>
+                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500">HOW LIKELY</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {msg.analysis.potentialConditions.map((cond, cIdx) => (
@@ -132,7 +132,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = React.memo(({
                   {/* Recommended Clinical Roadmap */}
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5">
-                      Recommended Clinical Action Protocol
+                      Recommended Next Steps
                     </p>
                     <div className="space-y-1.5">
                       {msg.analysis.recommendations.map((rec, rIdx) => (
@@ -160,7 +160,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = React.memo(({
                     <div className="w-4 h-4 rounded bg-teal-700 text-white flex items-center justify-center text-[9px] font-bold">
                       +
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">RapidAid Clinical AI</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">RapidAid Health AI</span>
                     {msg.fromVoice && (
                       <span className="px-1.5 py-0.2 rounded bg-teal-50 dark:bg-teal-950/80 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-[9px] font-mono font-bold">
                         VOICE ENCOUNTER
