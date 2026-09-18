@@ -631,10 +631,10 @@ SAFETY RULES:
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
               title="Close Audio Panel"
             >
-              <X className="w-4 h-4 lg:hidden" />
+              <X className="w-5 h-5 lg:hidden" />
               <ChevronRight className="w-4 h-4 hidden lg:block" />
             </button>
           </div>

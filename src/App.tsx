@@ -812,7 +812,7 @@ export default function App() {
             {!showHistory && (
               <button
                 onClick={() => setShowHistory(true)}
-                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
                 title="Open Encounters History"
               >
                 <History className="w-4 h-4" />
@@ -826,11 +826,11 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Clinical SOAP Chart Button */}
             <button
               onClick={() => setShowSoapModal(true)}
-              className="px-2.5 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors flex items-center gap-1.5 shadow-xs"
+              className="px-2 sm:px-2.5 py-1.5 min-h-[36px] rounded-lg bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors flex items-center gap-1.5 shadow-xs"
               title="Open Clinical Encounter Progress Note (SOAP)"
             >
               <FileText className="w-3.5 h-3.5 text-teal-800 dark:text-teal-300" />
@@ -840,7 +840,7 @@ export default function App() {
             {/* Audio Exam Station Toggle */}
             <button
               onClick={() => setShowVoiceCompanion(prev => !prev)}
-              className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs ${
+              className={`px-2 sm:px-2.5 py-1.5 min-h-[36px] rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs ${
                 showVoiceCompanion
                   ? 'bg-teal-700 border-teal-700 text-white'
                   : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -854,7 +854,7 @@ export default function App() {
             {/* Quick Dark/Light Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
+              className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors shadow-xs"
               title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
@@ -864,7 +864,7 @@ export default function App() {
             <div className="relative">
               <button
                 onClick={() => setShowToolsMenu(!showToolsMenu)}
-                className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors shadow-xs flex items-center gap-1 ${
+                className={`p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg border text-xs font-semibold transition-colors shadow-xs ${
                   showToolsMenu
                     ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
